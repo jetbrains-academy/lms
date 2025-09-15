@@ -1,0 +1,48 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        {% if course_list %}
+          <table class="table table-bordered">
+            <tr class="active">
+              <th>Course</th>
+              <th>{% trans %}Semester{% endtrans %}</th>
+              <th width="30%">{% trans %}Professors{% endtrans %}</th>
+              <th width="15%"></th>
+            </tr>
+            {% for course in course_list %}
+                <tr class="{{ "unread" if course.has_unread() else "noop" }}">
+                  <td><a href="{{ course.get_absolute_url() }}">{{ course.name }}</a></td>
+                  <td>{{ course.semester }}</td>
+                  <td>
+                    <ul class="list-unstyled margin-bottom-0">
+                      {% for ct in course.course_teachers.all() %}
+                        <li>
+                         <a href="{{ ct.teacher.teacher_profile_url() }}">{{ ct.teacher.get_full_name() }}</a>
+                          {% if SpectatorRole in ct.roles %}
+                             <i class="fa fa-eye" title="Spectator"></i>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </td>
+                  <td>
+                    {% if request.user.has_perm(CreateCourseNews, course) %}
+                    <a href="{{ course.get_create_news_url() }}">{% trans %}Add news{% endtrans %}</a><br>
+                    {% endif %}
+                    {% if course.group_mode == "manual" %}
+                      <a href="{{ get_student_groups_url(course) }}">Student groups</a>
+                    {% endif %}
+                  </td>
+                </tr>
+            {% endfor %}
+          </table>
+        {% else %}
+          <h4>The list is empty :(</h4>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

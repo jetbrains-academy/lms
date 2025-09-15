@@ -1,0 +1,5 @@
+{% load tz %}{% localtime off %}A new assignment <a href="{{ a_s_link_student }}">{{ assignment_name }}</a> has been posted on the website. It is due on <span style="white-space: nowrap;">{{ deadline_at|date:"d E" }}</span> by {{ deadline_at|time:"H:i" }}. The assignment description is provided below. Please note that it might be displayed incorrectly in the email.
+
+{{ assignment_text|safe }}
+
+This is an automated email, no need to reply.{% endlocaltime %}

@@ -1,0 +1,29 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block title %}Assignment Review Queue{% endblock title %}
+
+{% block body_attrs %} class="gray" data-init-sections="assignmentsCheckQueue"{% endblock body_attrs %}
+
+{% block javascripts %}
+  {{ render_bundle('teaching', config='V1', extension='js') }}
+
+  <style>
+    .checkbox label {
+      user-select: none;
+    }
+  </style>
+
+{% endblock javascripts %}
+
+{% block content %}
+  <div class="container">
+    {% if app_data is not defined or app_data.props.courseOptions is not defined %}
+      <h1 class="mb-30">Review queue</h1>
+      You’re not assigned as a teacher for any course sessions.
+    {% else %}
+
+      <div class="__react-app" data-component="AssignmentsCheckQueue" data-init='{{ app_data|tojson|safe }}'></div>
+
+    {% endif %}
+  </div>
+{% endblock content %}

@@ -1,0 +1,83 @@
+#student-submission-comments {
+  label[for=id_text] {
+    font-size: 18px;
+    font-weight: 500;
+  }
+}
+
+#update-comment-model-form {
+  .modal-header {
+    background: #f8f8f8;
+    border-radius: 3px;
+  }
+}
+
+.csc-well {
+  background-color: #f8f8f8;
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+
+  blockquote {
+    border-left-color: #CFCFCF;
+  }
+
+  > :last-child, > :last-child > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+.assignment-attachment {
+  color: #999;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+
+  li.author-student, li.author-system {
+    margin-right: 60px;
+    margin-left: 0;
+  }
+
+  li.author-teacher {
+    margin-right: 0px;
+    margin-left: 60px;
+  }
+}
+
+.info-panel {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 16px;
+  font-size: small;
+
+  display: grid;
+  grid-template-columns: minmax(50px, auto) auto;
+  gap: 12px 9px;
+
+  .next-unchecked-btn {
+    grid-column: 1 / -1;
+  }
+
+  .info-panel-row-label {
+    color: #555;
+    font-weight: bold;
+  }
+}
+
+@media (max-width: 992px) {
+  .info-panel {
+    grid-template-columns: auto;
+    gap: 0;
+  }
+
+  .next-unchecked-btn, .info-panel-row-value:not(:last-child) {
+    margin-bottom: 12px;
+  }
+}
+
+.text-error {
+  font-weight: bold;
+  color: $color-red;
+}

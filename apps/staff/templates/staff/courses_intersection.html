@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Student Overlap{% endblock title %}
+
+{% block javascripts %}
+    <script type="text/javascript" defer>
+        $('select.form-control').selectpicker({
+            maxOptions: 2,
+            iconBase: 'fa',
+            tickIcon: 'fa-check'
+        });
+    </script>
+{% endblock javascripts %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="card">
+                <h4 class="card-header bg-gray m-b-20">{{ current_term|title }}</h4>
+                <div class="panel-body">
+                    <div class="row">
+                        <form action="">
+                            <div class="col-xs-10">
+                                <select class="form-control" name="course_offerings[]" multiple size="2" style="display: none;">
+                                    {% for course in course_offerings %}
+                                        <option value="{{ course.pk }}"
+                                                {% if course.pk in query.course_offerings %}selected="selected"{% endif %}>{{ course.meta_course.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xs6">
+                                <button value="submit" class="btn btn-primary">Show</button>
+                            </div>
+                        </form>
+                    </div>
+                    <hr>
+                    <p class="text-muted">Overlaps found: {{ intersection|length }}</p>
+                    <div class="row">
+                    {% for co in results %}
+                        <div class="col-xs-6">
+                            <h4>{{ co.meta_course.name }}</h4>
+                        </div>
+                    {% endfor %}
+                    </div>
+                    <div class="row">
+                    {% for co in results %}
+                        <div class="col-xs-6">
+                            {% if co.enrollment_set.all %}
+                                <ul class="list-group list-group-dividered">
+                                    {% for e in co.enrollment_set.all %}
+                                        <li class="list-group-item {% if e.student_id in intersection %}text-danger{% endif %}">{{ e.student }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,22 @@
+ <div class="row">
+    <div class="col-xs-6 pr-0">
+        <div class="input-group datepicker" data-td-target-toggle="nearest">
+            <span class="input-group-addon" data-td-toggle="datetimepicker">
+                <i class="fa fa-calendar"></i>
+            </span>
+            {% with widget=widget.subwidgets.0 %}
+                {% include widget.template_name %}
+            {% endwith %}
+        </div>
+    </div>
+    <div class="col-xs-6">
+        <div class="input-group timepicker" data-td-target-toggle="nearest">
+            <span class="input-group-addon" data-td-toggle="datetimepicker">
+                <i class="fa fa-clock-o"></i>
+            </span>
+            {% with widget=widget.subwidgets.1 %}
+                {% include widget.template_name %}
+            {% endwith %}
+        </div>
+    </div>
+</div>

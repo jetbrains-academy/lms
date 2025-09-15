@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{# Note: Templates are duplicated in python and js code. Make sure to edit in both place. #}
+{% load i18n %}
+{% load lookup from core_tags %}
+
+{% block body_attrs %} data-init-sections="courseOfferings"{% endblock body_attrs %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+        window.courseOfferingsData = JSON.parse('{{ json|escapejs|safe }}');
+    </script>
+
+    <script type="text/template" id="courses-list-table-row">
+        <tr>
+            <td><% if (co.is_club_course) { %><span data-title="{% trans "CS club course" %}" class="__club"></span><% } %><a href="<%-co.url%>" class="__course"><%-co.name%></a></td>
+            <td>
+                <% for (var i = 0; i < co.teachers.length; i++) { %>
+                    <a class="__teacher text-nowrap" href="/teachers/<%=co.teachers[i].id%>/"><%=co.teachers[i].name%></a><% if (i != co.teachers.length - 1) { %>, <% } %>
+                <% } %>
+            </td>
+        </tr>
+    </script>
+
+    <script type="text/template" id="courses-term-filter-option">
+        <a data-type="<%=term.type%>" href="#<%=term.type%>"<% if (term.type == activeType) { %>class="active"<% } %>><%=term.name%></a>
+    </script>
+{% endblock javascripts %}
+
+{% block content %}
+    <div class="container" id="courses-list">
+        <h1 class="content-title">List of courses</h1>
+
+        {% if terms %}
+            <form action="" class="form-inline __courses-filter">
+                <div class="form-group __courses-filter--academic-year">
+                    Academic year: <select name="academic_year" class="form-control">
+                        {% for term_year in terms %}
+                        <option value="{{ term_year }}"{% if term_year == active_academic_year %}selected{% endif %}>{{ term_year }}/{{ term_year|add:"1" }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group __courses-filter--term">
+                    {% with types=terms|lookup:active_academic_year %}
+                        Semester: {% for term_type in types reversed %}
+                            <a data-type="{{ term_type }}" href="#{{ term_type }}"{% if term_type == active_type %}class="active"{% endif %}>{{ TERM_TYPES|lookup:term_type }}</a>{% endfor %}
+                    {% endwith %}
+                </div>
+            </form>
+        {% endif %}
+
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="courses">
+                {% if courses|lookup:active_slug %}
+                    <table class="table __courses">
+                        <thead>
+                            <tr>
+                                <th style="width:470px;">Course Name</th>
+                                <th>Teachers</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for co in courses|lookup:active_slug %}
+                                <tr>
+                                    <td>{% if co.is_club_course %}<span data-title="{% trans "CS club course" %}" class="__club"></span>{% endif %}<a href="{{ co.url }}" class="__course">{{ co.name }}</a></td>
+                                    <td>
+                                        {% for teacher in co.teachers %}
+                                            <a class="__teacher text-nowrap" href="/teachers/{{ teacher.id }}/">{{ teacher.name }}</a>{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <h4 class="text-center">{% trans "No courses yet" %}</h4>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

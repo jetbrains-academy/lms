@@ -1,0 +1,99 @@
+{% if view.is_for_staff %}
+  {% set score_form_url = url('staff:gradebook_import_scores_by_enrollment_id', course_id=gradebook.course.pk, subdomain=LMS_SUBDOMAIN) %}
+{% else %}
+  {% set score_form_url = url('teaching:gradebook_import_scores_by_enrollment_id', course_id=gradebook.course.pk, subdomain=LMS_SUBDOMAIN) %}
+{% endif %}
+<div id="import-scores-from-csv-enrollments" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">{% trans %}Import scores from CSV{% endtrans %}</h4>
+      </div>
+      <form action="{{ score_form_url }}" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="csv-assignment-selected">1. {% trans %}Choose assignment{% endtrans %}</label>
+            <select required name="assignment" class="form-control" id="csv-assignment-selected">
+              <option value="">-----</option>
+              {% for gradebook_assignment in gradebook.assignments.values() %}
+                {% with assignment=gradebook_assignment.assignment %}
+                  <option value="{{ assignment.pk }}">{{ assignment.title }}</option>
+                {% endwith %}
+              {% endfor %}
+            </select>
+            <span class="help-block">{% trans %}Score will be imported for selected assignment{% endtrans %}</span>
+          </div>
+          <div class="form-group">
+            <label for="csv-choose-file">2. {% trans %}Choose csv file{% endtrans %}</label>
+            <input id="input-id" name="csv_file" value="2" type="file" required>
+            <div class="help-block">
+              File format:<br>
+              <ul>
+                <li>Separate values with commas.</li>
+                <li>The first line contains headers. For successful import, make sure to include <code>id</code> and <code>score</code>.</li>
+                <li>List each student's ID and their grade in the following rows.</li>
+              </ul>
+              <p>To find student IDs, download the course gradebook as a CSV file – it includes an <code>id</code> column.</p>
+              File content example:<br>
+            </div>
+            <pre><code>id,full name,score
+1,Ivanov I,7
+2,Ivanova A,42</code></pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">{% trans %}Close{% endtrans %}</button>
+          <button type="submit" class="btn btn-primary">{% trans %}Import{% endtrans %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if view.is_for_staff %}
+  {% set course_form_url = url('staff:gradebook_import_course_grades_by_enrollment_id', course_id=gradebook.course.pk, subdomain=LMS_SUBDOMAIN) %}
+{% else %}
+  {% set course_form_url = url('teaching:gradebook_import_course_grades_by_enrollment_id', course_id=gradebook.course.pk, subdomain=LMS_SUBDOMAIN) %}
+{% endif %}
+<div id="import-grades-from-csv-enrollments" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Import course grades from CSV using enrollment ID</h4>
+      </div>
+      <form action="{{ course_form_url }}" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="csv-choose-file">2. {% trans %}Choose csv file{% endtrans %}</label>
+            <input id="input-id" name="csv_file" value="2" type="file" required>
+            <div class="help-block">
+              File format:<br>
+              <ul>
+                <li>Separate values with commas.</li>
+                <li>The first line contains headers. For successful import, make sure to include <code>id</code> and <code>Final grade</code>.</li>
+                <li>List each student's ID and their course grade in the following rows.</li>
+              </ul>
+              <p>To find student IDs, download the course gradebook as a CSV file – it includes an <code>id</code> column.</p>
+              File content example:<br>
+            </div>
+            <pre><code>id,Final grade
+1,100
+2,75
+3,5
+5,3
+8,Re-credit
+13,Not graded</code></pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">{% trans %}Close{% endtrans %}</button>
+          <button type="submit" class="btn btn-primary">{% trans %}Import{% endtrans %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

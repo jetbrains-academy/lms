@@ -1,0 +1,70 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="row timetable-header-row">
+    <div class="col-xs-12 h2-and-buttons">
+      <h2>{{ calendar.month_label }}</h2>
+      <div class="btn-toolbar">
+        <div class="btn-group">
+          <a href="?year={{ calendar.prev_month.year }}&month={{ calendar.prev_month.month }}" role="button" class="btn btn-default"><i class="fa fa-chevron-left"></i></a>
+          <a href="?year={{ calendar.next_month.year }}&month={{ calendar.next_month.month }}" role="button" class="btn btn-default"><i class="fa fa-chevron-right"></i></a>
+        </div>
+        {% if calendar_type != 'full' and calendar_type != 'public_full' %}
+          <div class="btn-group">
+            <a href="{% if calendar_type == 'teacher' %}{{ url('teaching:timetable') }}{% else %}{{ url('study:timetable') }}{% endif %}"
+               role="button"
+               class="btn btn-default">{% trans %}List{% endtrans %}</a>
+            <button class="btn btn-default active">{% trans %}Calendar{% endtrans %}</button>
+          </div>
+        {% endif %}
+      </div>
+      <hr>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+    <div class="event-types">
+    Event types: <span class="lecture">Lecture</span> <span class="seminar">Seminar</span>
+    </div>
+    {% for week_day in calendar.week_days %}{{ week_day }}{% endfor %}
+      <table class="table table-bordered calendar">
+        <tr>
+            {% for weekday_title in calendar.week_titles %}
+                <th>{{ weekday_title }}</th>
+            {% endfor %}
+        </tr>
+        {% for week in calendar.weeks %}
+        <tr id="week_{{week.iso_number}}">
+          {% for day in week.days %}
+          <td class="{% if day.date.month == calendar.month %}in-semester{% else %}not-in-semester{% endif %}{% if day.date == today %} today{% endif %}">
+            {% if loop.first %}
+                <div class="week-num-container">
+                  <div class="week-num">
+                    {% if calendar_type != 'public_full' %}
+                      <a href="{% if calendar_type == 'teacher' %}{{ url('teaching:timetable') }}{% else %}{{ url('study:timetable') }}{% endif %}?year={{ calendar.year }}&week={{ week.iso_number }}">{{ week.iso_number }}</a>
+                    {% else %}
+                      {{ week.iso_number }}
+                    {% endif %}
+                  </div>
+                </div>
+            {% endif %}
+            <div class="cell">
+              <div class="day">
+                {{ day.date.day }}
+              </div>
+              {% for event in day.events %}
+              <div class="event {{ event.type }}" title="{{ event.description }}">
+                <a href="{{ event.url }}">{{ event.starts_at|time("H:i") }}–{{ event.ends_at|time("H:i") }} {{ event.name }}</a>
+              </div>
+              {% endfor %}
+            </div>
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}

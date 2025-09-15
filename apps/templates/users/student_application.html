@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <h3>Program enrollment</h3>
+      <p>You are about to enroll on a {{ program_run.program.title }} {{ program_run.start_year }} program</p>
+      {% crispy form %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

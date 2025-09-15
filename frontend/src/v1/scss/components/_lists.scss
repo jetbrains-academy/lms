@@ -1,0 +1,116 @@
+.o-users-vlist-with-photo {
+  h4 {
+    margin-top: 0;
+  }
+
+  li {
+    padding-bottom: 10px;
+    @extend .clearfix;
+
+    img, .square-photo-stub {
+      float: left;
+      margin-right: 10px;
+    }
+  }
+}
+
+.c-student-faces {
+  padding: 30px 0;
+
+  .student {
+    float: left;
+    border: 1px solid #fff;
+    position: relative;
+
+    &:hover {
+      figcaption {
+        opacity: 0.8;
+      }
+    }
+
+    img {
+      background: #4F86A0;
+    }
+
+    figcaption {
+        background: #000;
+        opacity: 0.5;
+        -webkit-transition: 0.3s;
+        transition: 0.3s;
+        width: 100%;
+        font-size: 1.2rem;
+        text-align: left;
+        color: #fff;
+        position: absolute;
+        bottom: 0;
+        padding: .5rem;
+
+      &.expelled {
+        background: $color-red;
+        opacity: 0.8;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+
+.list-group {
+  &.inverse {
+    .list-group-item {
+      color: $color-gray-20;
+      background: $background-grey;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      padding: 8px 0;
+      border-bottom: 1px solid $color-gray-90;
+      border-color: $color-gray-90!important;
+      white-space: nowrap;
+      overflow:hidden;
+      -ms-text-overflow: ellipsis;
+      text-overflow: ellipsis;
+
+      &:first-child {
+        border-top-width: 0;
+      }
+      &:last-child {
+        border-bottom-width: 0;
+      }
+
+
+      &:hover, &:focus {
+        color: $color-blue;
+      }
+
+      &.active {
+        color: $color-blue!important;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.list-group._border-0 {
+  .list-group-item {
+    border: 0;
+  }
+}
+
+ul {
+  &.__files {
+
+    a {
+      text-decoration: none;
+
+      &:hover, &:focus {
+          color: $color-red;
+      }
+    }
+  }
+}
+
+

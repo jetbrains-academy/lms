@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react",
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "paths": {
+      "~/*": [
+        "./src/v1/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,108 @@
+// Z-levels from materialcss and mui frameworks
+.z-depth-0 {
+  box-shadow: none !important;
+}
+
+.z-depth-1 {
+  // replaced with .mui--z1
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24)
+}
+
+.z-depth-2 {
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+.z-depth-3 {
+  box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.3);
+}
+
+.z-depth-4 {
+  box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.3);
+}
+
+.z-depth-5 {
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.14), 0 6px 30px 5px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+// List group derived
+.list-group-dividered {
+  .list-group-item {
+    &:first-child {
+      border-radius: 0;
+    }
+
+    &:last-child {
+      border-radius: 0;
+      border-bottom: 0;
+    }
+
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-top-color: #e4eaec;
+
+    &.disabled, &.disabled:focus, &.disabled:hover {
+      background: none;
+    }
+
+    &.active, &.active:focus, &.active:hover {
+      background: none;
+      color: $color-blue;
+    }
+  }
+}
+
+.list-group-dividered .list-group-item.active:hover {
+  border-top-color: #e4eaec;
+}
+
+.list-group-dividered .list-group-item:last-child {
+  border-bottom-color: #e4eaec;
+}
+
+.list-group-dividered .list-group-item:first-child {
+  border-top-color: transparent;
+}
+
+.list-group-dividered .list-group-item:first-child.active:hover {
+  border-top-color: transparent;
+}
+
+.list-group-full .list-group-item {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+// Dropdown with bullet
+.dropdown-menu.bullet {
+  margin-top: 12px
+}
+
+.dropdown-menu.bullet:after, .dropdown-menu.bullet:before {
+  position: absolute;
+  left: 10px;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  content: '';
+  border: 7px solid transparent;
+  border-top-width: 0;
+}
+
+.dropdown-menu.bullet.pull-right:after, .dropdown-menu.bullet.pull-right:before {
+  right: 22px;
+  left: auto;
+}
+
+.dropdown-menu.bullet:before {
+  top: -7px;
+  border-bottom-color: #ccc
+}
+
+.dropdown-menu.bullet:after {
+  top: -6px;
+  border-bottom-color: #fff
+}
+
+.dropdown-menu-right.bullet:after, .dropdown-menu-right.bullet:before {
+  right: 10px;
+  left: auto
+}

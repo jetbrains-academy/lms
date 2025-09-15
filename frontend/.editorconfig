@@ -1,0 +1,18 @@
+# https://editorconfig.org/
+
+root = true
+
+[*]
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{js,jsx,html}]
+ij_javascript_enforce_trailing_comma = whenmultiline
+ij_javascript_force_quote_style = true
+ij_javascript_use_double_quotes = false
+ij_javascript_force_semicolon_style = false
+

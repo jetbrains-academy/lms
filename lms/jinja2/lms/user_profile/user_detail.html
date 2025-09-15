@@ -1,0 +1,122 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% set request_user = request.user %}
+
+{% block title -%}
+  {{ profile_user.get_short_name() }} - {% trans %}Profile{% endtrans %} {% trans %}on site{% endtrans %} {{ request.site.name }}
+{%- endblock title %}
+
+{% block body_attrs %} data-init-sections="profile"{% endblock body_attrs %}
+
+{% block javascripts %}
+  <script type="text/javascript">
+    window.__CSC__.photoApp = {{ appData['props']['photo']|safe }};
+    window.__CSC__.socialAccountsApp = {{ appData['props']['socialAccounts']|safe }};
+  </script>
+{% endblock javascripts %}
+
+{% block content %}
+  <div id="profile">
+    <header>
+      <div class="thumbnail text-center">
+        <div class="thumbnail-inner">
+          <div class="thumbnail-img">
+            {% with im = profile_user.get_thumbnail(profile_user.ThumbnailSize.BASE, use_stub=True) -%}
+              <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="" />
+            {% endwith -%}
+          </div>
+          {% if can_edit_profile %}
+            <div class="profile-actions">
+              <a href="#user-photo-upload">{% trans %}Change photo{% endtrans %}</a>
+              <a href="{{ profile_user.get_update_profile_url() }}"><i class="fa fa-cog"></i> {% trans %}Edit{% endtrans %}</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      <h2>
+        {{ profile_user.first_name }} <br>{{ profile_user.last_name }}
+        {% if request_user.is_superuser %}
+          <a href="{{ url('admin:users_user_change', object_id=profile_user.pk) }}" target="_blank"><i
+            class="fa fa-pencil-square-o"></i></a>
+          <form action="{{ url('admin:loginas-user-login', user_id=profile_user.pk) }}" method="POST" style="display: inline">
+            {% csrf_token %}
+            <a title="" class="login-helper" href="#"><i class="fa fa-ils" aria-hidden="true"></i></a>
+          </form>
+        {% endif %}
+      </h2>
+      {% if profile_user.bio.strip() %}
+        <div class="about-me mb-15">
+          <div class="ubertext">
+            {{ profile_user.bio|markdown("user_bio", 3600, profile_user.pk, profile_user.modified) }}
+          </div>
+        </div>
+      {% elif profile_user.pk == request_user.pk or request_user.is_curator %}
+        <div class="about-me"></div>
+      {% endif %}
+    </header>
+
+    <div class="profile-additional-info">
+      <div class="container">
+        <div class="nav-tabs-inverse">
+          <ul class="nav nav-tabs nav-tabs-solid" data-plugin="nav-tabs" role="tablist">
+            <li class="active" role="presentation">
+              <a data-toggle="tab" href="#profile-tab" aria-controls="current" role="tab" aria-expanded="true">General</a>
+            </li>
+            {% if can_edit_profile and available_providers %}
+              <li role="presentation">
+                <a href="#connected-accounts" role="tab" data-toggle="tab">Accounts</a>
+              </li>
+            {% endif %}
+            {% if can_view_personal_data and student_profiles %}
+              <li role="presentation">
+                <a href="#student-profiles" role="tab" data-toggle="tab">Student profiles</a>
+              </li>
+            {% endif %}
+            {% if request_user.is_curator %}
+              <li role="presentation">
+                <a href="#for-curator-tab" role="tab" data-toggle="tab">
+                  <i class="fa fa-user-secret"></i> For managers
+                </a>
+              </li>
+            {% endif %}
+            {% if can_view_assignments and student_profiles %}
+              <li role="presentation">
+                <a href="#student-assignments-tab" role="tab" data-toggle="tab">
+                  <i class="fa fa-list"></i>&nbsp;Assignments
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-content tab-content py-30">
+      <div class="tab-pane active" role="tabpanel" id="profile-tab">
+        {% include "lms/user_profile/_tab_account.html" %}
+      </div>
+      {% if can_edit_profile and available_providers %}
+        <div class="tab-pane" role="tabpanel" id="connected-accounts">
+          {% include "lms/user_profile/_tab_connected_accounts.html" %}
+        </div>
+      {% endif %}
+      {% if can_view_personal_data and student_profiles %}
+        <div class="tab-pane" role="tabpanel" id="student-profiles">
+          {% include "lms/user_profile/_tab_student_profiles.html" %}
+        </div>
+      {% endif %}
+      {% if request_user.is_curator %}
+        <div class="tab-pane" role="tabpanel" id="for-curator-tab">
+          {% include "lms/user_profile/_tab_curators.html" %}
+        </div>
+      {% endif %}
+      {% if can_view_assignments and student_profiles %}
+        <div class="tab-pane" role="tabpanel" id="student-assignments-tab">
+          {% include "lms/user_profile/_tab_assignments.html" %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% include "lms/user_profile/_profile_upload_photo.html" %}
+{% endblock content %}

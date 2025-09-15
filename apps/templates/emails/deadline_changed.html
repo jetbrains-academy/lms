@@ -1,0 +1,3 @@
+{% load tz %}{% localtime off %}The deadline for <a href="{{ a_s_link_student }}">{{ assignment_name }}</a> has changed: it is now due on <span style="white-space: nowrap;">{{ deadline_at|date:"d E" }}</span> by {{ deadline_at|time:"H:i" }}.
+
+This is an automated email, no need to reply.{% endlocaltime %}

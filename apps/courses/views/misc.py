@@ -1,0 +1,45 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import generic
+from vanilla import DetailView
+
+from core.models import Location
+from courses.models import Course, CourseTeacher
+from users.constants import Roles
+from users.models import User
+
+
+class TeacherDetailView(LoginRequiredMixin, DetailView):
+    template_name = "lms/courses/teacher_detail.html"
+    context_object_name = 'teacher'
+
+    def get_queryset(self, *args, **kwargs):
+        # FIXME: Будет показываться любой преподаватель с любого сайта с группой преподавателя
+        return User.objects.filter(group__role=Roles.TEACHER).distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # FIXME: move to service method and test
+        courses = (
+            Course.objects
+            .for_teacher(self.object)
+            .filter(~CourseTeacher.has_any_hidden_role(
+                lookup='course_teachers__roles',
+                hidden_roles=(CourseTeacher.roles.spectator,)
+            ))
+            .select_related('semester', 'meta_course')
+            .order_by('-semester__index', 'meta_course__name')
+            .distinct()
+        )
+        context['courses'] = courses
+        return context
+
+
+class VenueListView(generic.ListView):
+    model = Location
+    template_name = "courses/venue_list.html"
+    queryset = Location.objects.get_queryset()
+
+
+class VenueDetailView(generic.DetailView):
+    model = Location
+    template_name = "courses/venue_detail.html"

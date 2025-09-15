@@ -1,0 +1,117 @@
+<div class="panel-group" role="tablist">
+  {% for student_profile in student_profiles %}
+    {% set program_enrollment = student_profile.academic_program_enrollment %}
+    <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingOne">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" href="#student-profile-{{ student_profile.pk }}"
+             aria-expanded="{{ "true" if loop.first else "false" }}"
+             aria-controls="student-profile-{{ student_profile.pk }}">
+            {{ student_profile.get_type_display() }}{% if student_profile.year_of_admission %} enrolled in {{ student_profile.year_of_admission }}{% endif %}
+            {% if program_enrollment %}
+              , {{ program_enrollment.program.code }} ({{ program_enrollment.start_year }})
+            {% endif %}
+          </a>
+        </h4>
+      </div>
+      <div id="student-profile-{{ student_profile.pk }}" class="panel-collapse collapse{% if loop.first %} in{% endif %}" role="tabpanel"
+           aria-labelledby="headingOne">
+        <div class="panel-body">
+
+          <table class="table mt-20 mb-0">
+            {% if program_enrollment %}
+              <tr>
+                <td>Academic program</td>
+                <td>{{ program_enrollment.program.title }}</td>
+              </tr>
+            {% endif %}
+            <tr>
+              <td>{% trans %}Student ID{% endtrans %}</td>
+              <td
+                class="__react-app"
+                data-component="StudentIdEdit"
+                data-init='{"props": {"studentId": {{ student_profile.student_id|tojson|safe }}, "profileId": {{ student_profile.pk|tojson|safe }}}}'
+              >
+                {{ student_profile.student_id }}
+              </td>
+            </tr>
+            <tr>
+              <td>{% trans %}Admission year{% endtrans %}</td>
+              <td>{{ student_profile.year_of_admission }}</td>
+            </tr>
+            <tr>
+              <td>Status</td>
+              <td>
+                {{ student_profile.get_status_display()|default("—", True) }}
+              </td>
+            </tr>
+            {% if request.user.is_curator %}
+            <tr>
+              <td>Status history</td>
+              <td>
+                {% with student_status_history = student_profile.status_history.all() %}
+                  <table class="table table-condensed mb-0">
+                    <thead>
+                    <tr class="active">
+                      <th>Status</th>
+                      <th>Date modified</th>
+                    </tr>
+                    </thead>
+                    {% for student_status_log_record in student_profile.status_history.all() %}
+                      <tr>
+                        <td style="width:50%;" {% if not loop.first %}class="text-muted"{% endif %}>
+                          {{ student_status_log_record.get_status_display() }}
+                        </td>
+                        <td {% if not loop.first %}class="text-muted"{% endif %}>
+                          {{ student_status_log_record.status_changed_at|date("d.m.Y") }}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                    <tr>
+                      <td {% if student_status_history|length > 0 %}class="text-muted"{% endif %}>Enrolled</td>
+                      <td {% if student_status_history|length > 0 %}class="text-muted"{% endif %}>
+                        01.09.{{ student_profile.year_of_admission }}
+                      </td>
+                    </tr>
+                  </table>
+                {% endwith %}
+              </td>
+            </tr>
+            {% endif %}
+            {% if request.user.is_curator %}
+            <tr>
+              <td width="25%">{% trans %}University{% endtrans %}</td>
+              <td>{{ student_profile.university|default("—", True) }}</td>
+            </tr>
+              <tr>
+                <td>{% trans %}Comment{% endtrans %}</td>
+                <td>
+                  {% if student_profile.comment %}
+                    <div class="ubertext">
+                      {{ student_profile.comment|default("—", True)|markdown("curator_note_about_student", 3600, student_profile.pk, student_profile.modified) }}
+                    </div>
+                    <span class="student-comment-metainfo pull-right">
+                  {% if student_profile.comment_last_author_id %}{{ student_profile.comment_last_author.get_short_name() }}, {% endif %}
+                  {{ student_profile.comment_changed_at|date("d.m.Y H:i") }}
+                </span>
+                  {% else %}
+                    &mdash;
+                  {% endif %}
+                </td>
+              </tr>
+            {% endif %}
+          </table>
+
+        </div>
+      </div>
+      {% if request.user.is_superuser %}
+        <div class="panel-footer bg-gray" style="border-top: 1px solid #eee;">
+          <div class="clearfix">
+            <a href="{{ url('admin:users_studentprofile_change', object_id=student_profile.pk) }}" class="pull-right" target="_blank">Edit</a>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  {% endfor %}
+</div>

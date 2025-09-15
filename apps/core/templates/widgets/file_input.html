@@ -1,0 +1,14 @@
+{% load i18n %}
+{% load file_name from core_tags %}
+
+<div class="jasny fileinput input-group fileinput-{% if widget.value %}exists{% else %}new{% endif %}" data-provides="fileinput">
+    <div class="form-control" data-trigger="fileinput">
+        <i class="fa fa-file-o"></i> <span class="fileinput-filename">{% if widget.value %}{{ widget.value|file_name }}{% else %}{% translate 'No file selected' %}{% endif %}</span>
+    </div>
+    <span class="input-group-addon btn btn-default btn-file fileinput-new">
+        <span>{% translate 'Select' %}</span>
+        <input type="{{ widget.type }}" name="{{ widget.name }}" {% for name, value in widget.attrs.items %}{% if value is not False and name != 'class' %} {{ name }}{% if value is not True %}="{{ value|stringformat:'s' }}"{% endif %}{% endif %}{% endfor %}>
+    </span>
+    <input class="fileinput-clear-checkbox" type="hidden" name="{{ widget.checkbox_name }}">
+    <span id="{{ widget.checkbox_id }}" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">{{widget.clear_checkbox_label}}</span>
+</div>

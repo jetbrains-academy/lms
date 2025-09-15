@@ -1,0 +1,39 @@
+# Mac specific files
+.DS_Store
+._*
+
+*.sublime-project
+*.pyc
+*.sqlite3
+ansible/
+media/
+apps/coverage/
+.idea/
+.vscode/
+csc3/
+static/
+local/
+.cache/
+.pytest_cache/
+.mypy_cache/
+coverage_html/
+.coverage
+.env
+docker-compose.override.yml
+# TODO: replace public/ with submodule, add to ignore here
+*-debug.log
+
+
+
+# Translations
+*.mo
+*.pot
+.python-version
+
+node_modules/
+dist/
+
+.direnv/
+.envrc
+flake.nix
+flake.lock

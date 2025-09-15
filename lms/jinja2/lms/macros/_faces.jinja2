@@ -1,0 +1,20 @@
+{% macro faces(users, empty_text='No users found') %}
+    <div class="c-student-faces">
+        {% if users %}
+            {% for user in users %}
+                <div class="student">
+                    <a href="{{ user.get_absolute_url() }}">
+                        {% with im = user.get_thumbnail(user.ThumbnailSize.SQUARE, use_stub=True) -%}
+                            <img alt="{{ user.get_full_name() }}" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"/><br>
+                        {% endwith -%}
+                        <figcaption {% if user.status in StudentStatuses.inactive_status %}class="expelled"{% endif %}>
+                            {{ user.last_name }} {{ user.first_name }}
+                        </figcaption>
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">{{ empty_text }}</div>
+        {% endif %}
+    </div>
+{% endmacro %}

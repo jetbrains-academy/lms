@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm.fullname" . }}
+  labels:
+    {{- include "helm.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  minReadySeconds: 30
+  selector:
+    matchLabels:
+      {{- include "helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm.selectorLabels" . | nindent 8 }}
+    spec:
+      volumes:
+        {{- if .Values.enableAllowedEmails }}
+        - name: allowed-emails
+          configMap:
+            name: {{ include "helm.fullname" . }}
+        {{- end }}
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/ingress
+          operator: Equal
+      containers:
+        - args:
+            - --provider=google
+            - --upstream=file:///dev/null
+            - --http-address=0.0.0.0:4180
+            - --cookie-refresh=1h
+            - --set-xauthrequest
+            - --pass-access-token
+            - --exclude-logging-path=/ping
+            {{- if .Values.allowedDomain }}
+            - --email-domain={{ .Values.allowedDomain }}
+            {{- end }}
+            {{- if .Values.enableAllowedEmails }}
+            - --authenticated-emails-file=/emails/allowed-emails.txt
+            {{- end }}
+            {{- if .Values.redisUrl }}
+            - --session-store-type=redis
+            - --redis-connection-url={{ .Values.redisUrl }}
+            {{- end }}
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          name: {{ include "helm.fullname" . }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              port: 4180
+              path: /ping
+          volumeMounts:
+            {{- if .Values.enableAllowedEmails }}
+            - name: allowed-emails
+              mountPath: /emails
+              readOnly: true
+            {{- end }}
+          ports:
+            - containerPort: 4180
+              protocol: TCP
+          env:
+            - name: OAUTH2_PROXY_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CLIENT_ID
+                  name: {{ include "helm.fullname" . }}
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: CLIENT_SECRET
+                  name: {{ include "helm.fullname" . }}
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: COOKIE_SECRET
+                  name: {{ include "helm.fullname" . }}

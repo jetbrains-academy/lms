@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+
+{% load i18n %}
+{% load admin_reorder %}
+{% load render_bundle from webpack_loader %}
+{% load static %}
+
+{% block title %}{{ title }} | {% trans 'Django site admin' %}{% endblock %}
+
+
+{% block branding %}
+{% admin_reorder %}
+<h1 id="site-name">{% trans 'Django administration' %}</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}{% endblock %}
+
+
+{% block footer %}
+    <div id="footer"></div>
+    <style type="text/css">
+    .sweet-overlay, .sweet-alert { display: none; }
+    </style>
+
+    <script>
+      // Global Configuration
+      window.__CSC__ = {
+          config: {
+              csrfCookieName: "{{ CSRF_COOKIE_NAME }}",
+              sentryDSN: "{{ SENTRY_DSN }}",
+              JS_SRC: {
+                MATHJAX: "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML",
+              },
+              // Used to reflow editor on tab toggle event
+              uberEditors: [],
+              localStorage: {
+                  // Map from hash to dummy value (effectively a set)
+                  hashes: []
+              }
+          }
+      }
+    </script>
+
+    {% render_bundle 'vendor' 'js' 'V1' %}
+    {% render_bundle 'main' 'js' 'V1' %}
+{% endblock %}

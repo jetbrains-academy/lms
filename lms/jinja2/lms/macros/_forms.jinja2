@@ -1,0 +1,43 @@
+{% macro widget_attrs(bound_field) -%}
+{% for name, value in bound_field.field.widget.attrs.items() %}{% if value is not sameas False %} {{ name }}{% if value is not sameas True %}="{{ value }}"{% endif %}{% endif %}{% endfor %}
+{%- endmacro %}
+
+
+{% macro field(bound_field, hide_label=False, prepend_button="", prepend_text="", append_text="", append_button="", wrapper_classes="", popover_help_text="", label_classes="", input_classes="") -%}
+    {% if bound_field.is_hidden %}
+        {{ bound_field|safe }}
+    {% else %}
+        <div id="div_{{ bound_field.id_for_label }}" class="form-group{% if bound_field.errors %} has-error{% endif -%}{% if wrapper_classes %} {{ wrapper_classes }}{% endif %}">
+            {% if not hide_label -%}
+                <label for="{{ bound_field.id_for_label }}" class="control-label{% if label_classes %} {{ label_classes }}{%- endif %}">{{ bound_field.label }}{% if bound_field.field.required %}<span class="asteriskField">*</span>{% endif %}</label>
+            {%- endif %}
+            {% if popover_help_text -%}
+              <a class="btn btn-link p-0 pull-right has-popover" data-content="{{ popover_help_text }}"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a>
+            {%- endif %}
+            <div class="controls">
+                {% if prepend_text or prepend_button or append_text or append_button %}
+                  <div class="input-group">
+                    {% if prepend_button %}<span class="input-group-btn">{{ prepend_button }}</span>{% endif %}
+                    {% if prepend_text %}<span class="input-group-addon">{{ prepend_text }}</span>{% endif %}
+                    {{ bound_field|with_classes('form-control ' + input_classes) }}
+                    {% if append_text %}<span class="input-group-addon">{{ append_text }}</span>{% endif %}
+                    {% if append_button %}<span class="input-group-btn">{{ append_button }}</span>{% endif %}
+                  </div>
+                {% else %}
+                  {{ bound_field|with_classes('form-control ' + input_classes) }}
+                {% endif %}
+
+                {% if not popover_help_text and bound_field.help_text -%}
+                    <div class="help-block">{{ bound_field.help_text }}</div>
+                {%- endif %}
+                {% if bound_field.errors -%}
+                    <div class="help-block">
+                    {% for e in bound_field.errors %}
+                        {{ e }}<br>
+                    {% endfor %}
+                    </div>
+                {%- endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro %}

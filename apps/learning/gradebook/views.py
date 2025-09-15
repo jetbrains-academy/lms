@@ -1,0 +1,371 @@
+import csv
+import itertools
+from typing import Any, Optional, IO
+
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Prefetch
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.datastructures import MultiValueDictKeyError
+from django.utils.translation import gettext_lazy as _
+from django.views import View, generic
+from django.views.generic.base import TemplateResponseMixin
+
+from auth.mixins import PermissionRequiredMixin
+from auth.models import ConnectedAuthService
+from core.http import AuthenticatedHttpRequest, HttpRequest
+from core.utils import bucketize
+from courses.constants import AssignmentFormat, SemesterTypes
+from courses.models import Assignment, Course, Semester
+from courses.utils import get_current_term_pair
+from courses.views.mixins import CourseURLParamsMixin
+from learning.gradebook import (
+    BaseGradebookForm, GradeBookFilterForm, GradeBookFormFactory, gradebook_data
+)
+from learning.gradebook.data import get_student_assignment_state
+from learning.gradebook.services import (
+    assignment_import_scores_from_csv, enrollment_import_grades_from_csv
+)
+from learning.models import StudentGroup, Enrollment
+from learning.permissions import EditGradebook, ViewGradebook
+from learning.services.personal_assignment_service import (
+    get_personal_assignments_by_enrollment_id
+)
+
+__all__ = [
+    "GradeBookView",
+    "GradeBookCSVView"
+]
+
+from learning.settings import AssignmentScoreUpdateSource, EnrollmentGradeUpdateSource
+from users.models import StudentTypes, User
+
+
+class GradeBookListBaseView(generic.ListView):
+    model = Semester
+
+    def get_course_queryset(self):
+        return (Course.objects
+                .select_related("meta_course")
+                .order_by("meta_course__name"))
+
+    def get_term_threshold(self):
+        tz = self.request.user.time_zone
+        term_pair = get_current_term_pair(tz)
+        term_index = term_pair.index
+        # Skip to the spring semester
+        if term_pair.type == SemesterTypes.AUTUMN:
+            spring_order = SemesterTypes.get_choice(SemesterTypes.SPRING).order
+            autumn_order = SemesterTypes.get_choice(SemesterTypes.AUTUMN).order
+            # How many terms are between spring and autumn
+            spring_autumn_gap = abs(autumn_order - spring_order - 1)
+            term_index += spring_autumn_gap
+        return term_index
+
+    def get_queryset(self):
+        return (Semester.objects
+            .filter(index__lte=self.get_term_threshold())
+            .exclude(type=SemesterTypes.SUMMER)
+            .order_by('-index')
+            .prefetch_related(
+            Prefetch(
+                "course_set",
+                queryset=self.get_course_queryset(),
+                to_attr="course_offerings"
+            )))
+
+
+class GradeBookView(PermissionRequiredMixin, CourseURLParamsMixin,
+                    TemplateResponseMixin, View):
+    is_for_staff = False
+    user_type = 'teacher'
+    template_name = "lms/gradebook/gradebook_form.html"
+    context_object_name = 'assignment_list'
+    permission_required = ViewGradebook.name
+
+    def has_permission(self):
+        return self.request.user.is_superuser or super().has_permission()
+
+    def get_permission_object(self):
+        return self.course
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.gradebook = None
+        self.is_for_staff = kwargs.get('is_for_staff', False)
+
+    def get(self, request, *args, **kwargs):
+        filter_form = GradeBookFilterForm(data=request.GET, course=self.course)
+        selected_group = None
+        if filter_form.is_valid():
+            selected_group = filter_form.cleaned_data['student_group']
+        form = self.get_form(request.user, student_group=selected_group)
+        context = self.get_context_data(form=form, filter_form=filter_form)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.has_perm(EditGradebook.name, self.course):
+            raise PermissionDenied
+        filter_form = GradeBookFilterForm(data=request.GET, course=self.course)
+        selected_group = None
+        if filter_form.is_valid():
+            selected_group = filter_form.cleaned_data['student_group']
+        form = self.get_form(request.user, data=request.POST, files=request.FILES,
+                             student_group=selected_group)
+        if form.is_valid():
+            return self.form_valid(form, selected_group)
+        return self.form_invalid(form)
+
+    def get_form(self, user: User, data=None, files=None,
+                 student_group: Optional[int] = None, **kwargs):
+        self.gradebook = gradebook_data(self.course, student_group)
+        can_edit_gradebook = user.is_superuser or user.has_perm(EditGradebook.name, self.course)
+        cls = GradeBookFormFactory.build_form_class(self.gradebook, is_readonly=not can_edit_gradebook)
+        # Set initial data for all GET-requests
+        if not data and "initial" not in kwargs:
+            initial = GradeBookFormFactory.transform_to_initial(self.gradebook)
+            kwargs["initial"] = initial
+        return cls(data=data, files=files, **kwargs)
+
+    def form_valid(self, form: BaseGradebookForm,
+                   student_group: Optional[StudentGroup] = None):
+        conflicts_on_save = form.save(self.gradebook, changed_by=self.request.user)
+        if conflicts_on_save:
+            msg = _("<b>Warning: Some data was not saved.</b><br> Others made changes during editing. Please resolve the conflicts and resubmit the form.")
+            messages.warning(self.request, str(msg))
+            return self._form_invalid(form)
+        messages.success(self.request,
+                         str(_('Gradebook successfully saved.')),
+                         extra_tags='timeout')
+        if self.is_for_staff:
+            params = {"url_name": "staff:gradebook"}
+        else:
+            params = {}
+        url = self.course.get_gradebook_url(student_group=student_group, **params)
+        return redirect(url)
+
+    def form_invalid(self, form: BaseGradebookForm):
+        msg = _("Gradebook hasn't been saved.")
+        messages.error(self.request, str(msg))
+        return self._form_invalid(form)
+
+    def _form_invalid(self, form: BaseGradebookForm):
+        """
+        Extends form data with the values missing in the POST request (client
+        sends only changed values)
+        """
+        filter_form = GradeBookFilterForm(data=self.request.GET, course=self.course)
+        student_group = None
+        if filter_form.is_valid():
+            student_group = filter_form.cleaned_data['student_group']
+        self.gradebook = gradebook_data(self.course, student_group=student_group)
+        current_data = GradeBookFormFactory.transform_to_initial(self.gradebook)
+        data = form.data.copy()
+        for k, v in current_data.items():
+            if k not in data:
+                data[k] = v
+        form.data = data
+        context = self.get_context_data(form=form, filter_form=filter_form)
+        return self.render_to_response(context)
+
+    def get_context_data(self, form: BaseGradebookForm,
+                         filter_form: GradeBookFilterForm, **kwargs: Any):
+        context = {
+            'view': self,
+            'form': form,
+            'filter_form': filter_form,
+            'StudentTypes': StudentTypes,
+            'gradebook': self.gradebook,
+            'AssignmentFormat': AssignmentFormat,
+            'get_student_assignment_state': get_student_assignment_state
+        }
+        # TODO: Move to the model
+        filter_kwargs = {}
+        if not self.request.user.is_curator:
+            filter_kwargs["teachers"] = self.request.user
+        courses = (Course.objects
+                   .filter(**filter_kwargs)
+                   .order_by('-semester__index', '-pk')
+                   .select_related('semester', 'meta_course'))
+        context['course_offering_list'] = courses
+        context['user_type'] = self.user_type
+
+        return context
+
+
+class GradeBookCSVView(PermissionRequiredMixin, CourseURLParamsMixin,
+                       generic.base.View):
+    permission_required = ViewGradebook.name
+
+    def get_permission_object(self):
+        return self.course
+
+    def get(self, request, *args, **kwargs):
+        gradebook = gradebook_data(self.course)
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        filename = "{}-{}-{}.csv".format(kwargs['course_slug'],
+                                         kwargs['semester_year'],
+                                         kwargs['semester_type'])
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            filename)
+
+        writer = csv.writer(response)
+        headers = [
+            "id",
+            _("Last name"),
+            _("First name"),
+            _("Role"),
+            _("Group"),
+            _("Codeforces Handle"),
+            _("Final grade"),
+            _("Total"),
+        ]
+        for gradebook_assignment in gradebook.assignments.values():
+            a = gradebook_assignment.assignment
+            if gradebook.show_weight:
+                title = f"{a.title} (вес: {a.weight})"
+            else:
+                title = a.title
+            headers.append(title)
+        writer.writerow(headers)
+        students = [gs.student_profile.user_id for gs in gradebook.students.values()]
+        services_queryset = (ConnectedAuthService.objects
+                             .filter(user__in=students))
+        connected_services = bucketize(services_queryset, key=lambda cs: cs.user_id)
+        for gradebook_student in gradebook.students.values():
+            student = gradebook_student.student
+            student_profile = gradebook_student.student_profile
+            student_group = gradebook_student.student_group
+            connected_providers = connected_services.get(student.pk, [])
+            connected_providers = {cp.provider: cp for cp in connected_providers}
+            gitlab_manytask = connected_providers.get('gitlab-manytask')
+            writer.writerow(
+                itertools.chain(
+                    [gradebook_student.enrollment_id,
+                     student.last_name,
+                     student.first_name,
+                     student_profile.get_type_display(),
+                     (student_group and student_group.name) or "-",
+                     student.codeforces_login,
+                     gradebook_student.final_grade_display,
+                     gradebook_student.total_score],
+                    [(a.score if a and a.score is not None else '')
+                     for a in gradebook.student_assignments[gradebook_student.index]]))
+        return response
+
+
+class ImportAssignmentScoresBaseView(PermissionRequiredMixin, generic.View):
+    course: Course
+    permission_required = EditGradebook.name
+
+    def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
+        super().setup(request, *args, **kwargs)
+        queryset = (Course.objects
+                    .filter(pk=kwargs['course_id'])
+                    .select_related('meta_course', 'semester'))
+        self.course = get_object_or_404(queryset)
+
+    def get_permission_object(self) -> Course:
+        return self.course
+
+    def post(self, request: AuthenticatedHttpRequest, *args: Any, **kwargs: Any):
+        try:
+            assignment_id = int(request.POST['assignment'])
+            csv_file = request.FILES['csv_file']
+        except (MultiValueDictKeyError, ValueError, TypeError):
+            return HttpResponseBadRequest()
+        try:
+            assignment = (Assignment.objects
+                          .select_related("course")
+                          .get(course=self.course, pk=assignment_id))
+        except Assignment.DoesNotExist:
+            return HttpResponseBadRequest()
+        self.import_scores(assignment, csv_file)
+        return self.get_redirect_url()
+
+    def import_scores(self, assignment, csv_file):
+        try:
+            found, imported = self._import_scores(assignment, csv_file)
+            msg = _("Imported records for assignment {} - {} out of {}").format(
+                assignment.title, imported, found)
+            messages.info(self.request, msg)
+        except ValidationError as e:
+            msg = _('<b>Not all records were processed. '
+                    'Import stopped by an error:</b><br>')
+            messages.error(self.request, msg + e.message)
+        except UnicodeDecodeError as e:
+            messages.error(self.request, str(e))
+
+    def _import_scores(self, assignment, csv_file):
+        raise NotImplementedError
+
+    def get_redirect_url(self):
+        namespace = self.request.resolver_match.namespace
+        url = self.course.get_gradebook_url(url_name=f'{namespace}:gradebook')
+        return HttpResponseRedirect(url)
+
+
+class ImportAssignmentScoresByEnrollmentIDView(ImportAssignmentScoresBaseView):
+    def _import_scores(self, assignment, csv_file):
+        by_enrollment = get_personal_assignments_by_enrollment_id(assignment=assignment)
+        return assignment_import_scores_from_csv(csv_file,
+                                                 student_assignments=by_enrollment,
+                                                 changed_by=self.request.user)
+
+
+class ImportCourseGradesBaseView(PermissionRequiredMixin, generic.View):
+    course: Course
+    permission_required = EditGradebook.name
+
+    def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
+        super().setup(request, *args, **kwargs)
+        queryset = (Course.objects
+                    .filter(pk=kwargs['course_id'])
+                    .select_related('meta_course', 'semester'))
+        self.course = get_object_or_404(queryset)
+
+    def get_permission_object(self) -> Course:
+        return self.course
+
+    def post(self, request: AuthenticatedHttpRequest, *args: Any, **kwargs: Any):
+        try:
+            csv_file = request.FILES['csv_file']
+        except (MultiValueDictKeyError, ValueError, TypeError):
+            return HttpResponseBadRequest()
+        self.import_grades(self.course, csv_file)
+        return self.get_redirect_url()
+
+    def import_grades(self, assignment, csv_file):
+        try:
+            found, imported, errors = self._import_grades(self.course, csv_file)
+            msg = _("Records for {} course successfully imported: {} out of {} rows with valid student IDs.").format(
+                self.course, imported, found)
+            messages.info(self.request, msg, extra_tags='timeout')
+            if errors:
+                raise ValidationError("<br>".join(errors), code='not critical')
+        except ValidationError as e:
+            msg = '<b>Not all records were processed.</b><br>'
+            if e.code != 'not critical':
+                msg += '<b>Import failed due to an error:</b><br>'
+            messages.error(self.request, msg + e.message, extra_tags='timeout')
+        except UnicodeDecodeError as e:
+            messages.error(self.request, str(e), extra_tags='timeout')
+
+    def _import_grades(self, course: Course, csv_file: IO):
+        raise NotImplementedError
+
+    def get_redirect_url(self):
+        namespace = self.request.resolver_match.namespace
+        url = self.course.get_gradebook_url(url_name=f'{namespace}:gradebook')
+        return HttpResponseRedirect(url)
+
+
+class ImportCourseGradesByEnrollmentIDView(ImportCourseGradesBaseView):
+    def _import_grades(self, course: Course, csv_file: IO):
+        enrollments = {str(e.pk): e for e in Enrollment.active.filter(course=course)}
+        return enrollment_import_grades_from_csv(csv_file,
+                                                 course=course,
+                                                 enrollments=enrollments,
+                                                 changed_by=self.request.user)
+

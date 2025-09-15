@@ -1,0 +1,77 @@
+.submission-status {
+  font-weight: normal;
+  white-space: nowrap;
+
+  &.new {
+    color: $color-gray-60;
+  }
+
+  &.failed {
+    color: $color-red;
+  }
+
+  &.checking {
+    color: $color-orange;
+  }
+
+  &.passed {
+    color: $color-green;
+  }
+}
+
+.assignment-submission__date {
+  color: #999;
+
+  &.first {
+    color: #888;
+    font-weight: bold;
+  }
+}
+
+.assignment-submission {
+  &:hover {
+    .__edit {
+      opacity: 1;
+    }
+  }
+
+  h5.assignment {
+    margin-top: 0;
+    font-weight: bold;
+    margin-bottom: 14px;
+  }
+
+  .metainfo-holder {
+    margin-top: 10px;
+    min-height: 20px;
+  }
+
+  hr {
+    border-color: #CFCFCF;
+  }
+
+  .__edit {
+    line-height: 1.1;
+  }
+
+  .ubertext {
+    > p:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.assignment-actions {
+  border-bottom: 1px solid $color-gray-90;
+
+  > button {
+    outline: none;
+
+    &.active {
+      cursor: default;
+      color: $color-gray-48;
+      background: $background-grey;
+      text-decoration: none;
+    }
+  }
+}

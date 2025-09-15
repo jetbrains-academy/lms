@@ -1,0 +1,7 @@
+{% extends "login.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block form_legend %}
+    <p>Log in to continue.<br><a href="{{ register_url }}">Sign up</a> if you don't have an account yet.</p>
+{% endblock form_legend %}

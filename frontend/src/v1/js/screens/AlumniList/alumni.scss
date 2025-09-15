@@ -1,0 +1,17 @@
+.alumni-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 16px;
+
+  .resc-card {
+    display: flex;
+    gap: 16px;
+    min-height: 200px;
+    max-width: 600px;
+
+    .avatar {
+      max-width: 128px;
+      align-self: start;
+    }
+  }
+}

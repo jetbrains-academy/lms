@@ -1,0 +1,10 @@
+{% macro info_panel() %}
+  <div class="info-panel csc-well">
+    {{ caller() }}
+  </div>
+{% endmacro %}
+
+{% macro info_panel_row(title) %}
+  <div class="info-panel-row-label">{{ title }}</div>
+  <div class="info-panel-row-value">{{ caller() }}</div>
+{% endmacro %}

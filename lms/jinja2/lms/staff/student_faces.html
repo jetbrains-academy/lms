@@ -1,0 +1,12 @@
+{% extends "lms/layouts/v1_base.html" %}
+{% from "lms/macros/_faces.jinja2" import faces with context %}
+
+{% block content %}
+  <div class="container">
+    {{ crispy(filter_form) }}
+
+    <a href="{{ request.get_full_path() }}&print=Y" target="_blank">Print version</a>
+
+    {{ faces(users, 'No profiles found. Please adjust your search criteria.') }}
+  </div>
+{% endblock content %}

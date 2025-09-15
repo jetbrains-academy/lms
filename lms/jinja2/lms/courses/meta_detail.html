@@ -1,0 +1,36 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 h2-and-buttons">
+                <h2>{{ meta_course.name }}</h2>
+                {% set can_update_meta_course = request.user.has_perm("courses.change_metacourse", course) %}
+                {% if can_update_meta_course %}
+                    <div class="btn-toolbar">
+                        <a href="{{ meta_course.get_update_url() }}" class="btn btn-primary" role="button">{% trans %}Edit{% endtrans %}</a>
+                    </div>
+                {% endif %}
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="ubertext">
+                    {{ meta_course.description|markdown("course_description", 3600, meta_course.pk, meta_course.modified) }}
+                </div>
+                <hr>
+                {% if courses %}
+                    <h4>{% trans %}Semesters{% endtrans %}</h4>
+                    <ul>
+                      {% for course in courses %}
+                        <li><a href="{{ course.get_absolute_url() }}">{{ course.semester }}</a></li>
+                      {% endfor %}
+                    </ul>
+                {% else %}
+                  <h4>This course has no readings yet.</h4>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,218 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% import "lms/macros/_forms.jinja2" as forms %}
+
+{% block body_attrs %} data-init-sections="assignmentForm,tooltips,datetimepickers,selectpickers"{% endblock body_attrs %}
+
+{% block javascripts %}
+  {{ render_bundle('teaching', config='V1', extension='js') }}
+{% endblock javascripts %}
+
+{% block content %}
+  {% set assignment = assignment_form.instance %}
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <h2 class="content-title mb-20">
+          {% if assignment.pk %}Edit{% else %}Add{% endif %} assignment<br>
+          <small><a href="{{ assignment.course.get_absolute_url() }}">{{ assignment.course }}</a></small>
+        </h2>
+        <form action="" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ assignment_form.non_field_errors() }}
+          {{ forms.field(assignment_form['title']) }}
+          {{ forms.field(assignment_form['text']) }}
+          {% with field=assignment_form.attachments %}
+            <div class="form-group">
+              {{ forms.field(field, popover_help_text=field.help_text) }}
+              {% if assignment.pk is not none %}
+                <ul class="list-unstyled __files mt-10">
+                  {% for aa in assignment.assignmentattachment_set.all() %}
+                    <li><a title="Delete File" href="{{ aa.get_delete_url() }}"><i class="fa fa-trash-o"></i>&nbsp;{{ aa.file_name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+          {% endwith %}
+
+          <fieldset>
+            <legend>Assignment Settings</legend>
+            <div class="row">
+              <div class="col-xs-3">
+                {% with field=assignment_form.submission_type %}
+                  <div class="form-group">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label }}{% if field.field.required %}<span class="asteriskField">*</span>{% endif %}
+                    </label>
+                    <a class="btn btn-link p-0 pull-right has-popover" data-target="#submission-formats-help-block">
+                      <i class="fa fa-question-circle-o" aria-hidden="true"></i>
+                    </a>
+                    <div id="submission-formats-help-block" class="hidden">
+                      <dl class="mb-0">
+                        <dt>Website submission</dt>
+                        <dd>Students submit their solutions as text or attached files.</dd>
+                        <dt>JetBrains Academy course</dt>
+                        <dd>JetBrains Academy course from the marketplace</dd>
+                        <dt>External service</dt>
+                        <dd>Code reviews on GitHub or GitLab, course scores on Stepik.org, etc.</dd>
+                        <dt>Course penalty</dt>
+                        <dd>Deduction applied to the total course score on the gradebook page.</dd>
+                        <dt>No submission required</dt>
+                        <dd>Oral presentations, in-class tests, seminars, and similar activities.
+                        </dd>
+                      </dl>
+                    </div>
+                    {{ forms.field(field, hide_label=True) }}
+                  </div>
+                {% endwith %}
+              </div>
+              <div id="marketplace-field-wrapper" class="col-xs-3">
+                {% with field = assignment_form['jba_course_id'] -%}
+                  {{ forms.field(field, popover_help_text=field.help_text) }}
+                {%- endwith %}
+              </div>
+              <div class="col-xs-3">
+                {% with field = assignment_form['ttc'] -%}
+                  {{ forms.field(field, prepend_text='<i class="fa fa-clock-o"></i>'|safe, popover_help_text=field.help_text) }}
+                {%- endwith %}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6 col-md-4">
+                {{ forms.field(assignment_form['opens_at']) }}
+              </div>
+              <div class="col-sm-6 col-md-4">
+                {{ forms.field(assignment_form['deadline_at']) }}
+              </div>
+              <div class="col-sm-6 col-md-4">
+                {{ forms.field(assignment_form['time_zone']) }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="row">
+                  <div class="col-xs-3">
+                      {{ forms.field(assignment_form['maximum_score']) }}
+                  </div>
+                  <div class="col-xs-3">
+                      {% with field = assignment_form['weight'] -%}
+                        {{ forms.field(field, prepend_text='<i class="fa fa-clock-o"></i>'|safe, popover_help_text=field.help_text) }}
+                      {%- endwith %}
+                  </div>
+                  {% with field=assignment_form.restricted_to -%}
+                    {% if field.field.choices|length > 1 %}
+                      <div class="col-xs-3">
+                        {{ forms.field(field, popover_help_text=field.help_text) }}
+                      </div>
+                    {% endif %}
+                  {%- endwith %}
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset id="responsible-teachers-settings">
+            <legend>Assignment Reviewers</legend>
+            <div class="row">
+              <div class="col-xs-4">
+                {% with field=assignment_form.assignee_mode %}
+                  <div class="form-group">
+                    <label for="{{ field.id_for_label }}">
+                      {{ field.label }}{% if field.field.required %}<span class="asteriskField">*</span>{% endif %}
+                    </label>
+                    <a class="btn btn-link p-0 pull-right has-popover" data-target="#assignee-modes-help-block">
+                      <i class="fa fa-question-circle-o" aria-hidden="true"></i>
+                    </a>
+                    <div id="assignee-modes-help-block" class="hidden" data-placement="bottom">
+                      <p>
+                        The assignee mode determines which teachers get notifications about student activity if no reviewer is assigned. If a reviewer is assigned, only they get the notifications.
+                      </p>
+                      <p>
+                        A reviewer is chosen manually on the assignment review page. If there is only one teacher listed as responsible, they are assigned automatically as soon as a student logs their first activity.
+                      </p>
+                      <dl class="mb-0">
+                        <dt>No reviewer</dt>
+                        <dd>Reviewers are not assigned automatically. Teachers don't get notifications until a reviewer is manually assigned on the assignment review page.</dd>
+                        <dt>Manual selection</dt>
+                        <dd>Reviewers are manually chosen from the list of course instructors. By default, all teachers with the Assignment Reviewer role are selected.</dd>
+                        <dt>Default student groups</dt>
+                        <dd>The list of reviewers is based on the settings of the student group the student belongs to. Make sure to assign a reviewer for each student group (currently limited to one reviewer per group).</dd>
+                        <dt>Custom student groups</dt>
+                        <dd>In this mode, you can customize the reviewers associated with student groups for the current assignment.</dd>
+                        <dt>Balanced student groups</dt>
+                        <dd>Divide <b>all</b> student groups into <b>separate</b> buckets and assign teachers who <b>can</b> review assignments in each bucket. When automatically assigning reviewers, the system will balance their workload. </dd>
+                      </dl>
+                    </div>
+                    {{ forms.field(field, hide_label=True) }}
+                  </div>
+                {% endwith %}
+              </div>
+            </div>
+            {% set assignee_mode = assignment_form.assignee_mode.value() %}
+            <div class="row {% if assignee_mode != AssigneeMode.MANUAL %}hidden{% endif %}" data-assignee-mode="{{ AssigneeMode.MANUAL }}">
+              <div class="col-xs-12">
+                <b>Choose responsible teachers from the list</b>
+                {{ crispy(responsible_teachers_form) }}
+              </div>
+            </div>
+            <div class="row {% if assignee_mode != AssigneeMode.STUDENT_GROUP_CUSTOM %}hidden{% endif %}" data-assignee-mode="{{ AssigneeMode.STUDENT_GROUP_CUSTOM }}">
+              <div class="col-xs-12">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50%;">Group name</th>
+                      <th>Responsible teacher</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for student_group in student_groups_custom_form.student_groups %}
+                      <tr>
+                        <td>
+                          {% set field = student_groups_custom_form['assignee-' + student_group.pk|string + '-name'] %}
+                          {{ field.value() }}
+                        </td>
+                        <td>
+                          {% set field = student_groups_custom_form['assignee-' + student_group.pk|string + '-teacher'] %}
+                          {{ forms.field(field, hide_label=True, wrapper_classes='mb-0') }}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="row {% if assignee_mode != AssigneeMode.STUDENT_GROUP_BALANCED %}hidden{% endif %}" data-assignee-mode="{{ AssigneeMode.STUDENT_GROUP_BALANCED }}">
+              <div id="buckets-formset" class="col-xs-12">
+                {{ buckets_formset.management_form }}
+                {% for bucket_form in buckets_formset %}
+                    {{ crispy(bucket_form) }}
+                {% endfor %}
+                {% with errors = buckets_formset.non_form_errors() %}
+                  {% if errors %}
+                      <div class="alert alert-block alert-danger">
+                        <ul>
+                          {% for error in errors %}
+                             <li>{{ error }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                  {% endif %}
+                {% endwith %}
+                <div id="buckets-empty-form" style="display: none;">
+                    {{ crispy(buckets_formset.empty_form) }}
+                </div>
+              </div>
+
+              <button id="add-form" class="btn btn-info btn-block m-15">Add bucket</button>
+            </div>
+          </fieldset>
+
+          <input type="submit" name="save" value="Save" class="btn btn-primary" id="submit-id-save">
+          <input type="button" name="cancel" value="Cancel" class="btn btn btn-link" id="button-id-cancel" onclick="history.go(-1);">
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

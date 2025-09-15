@@ -1,0 +1,20 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block content %}
+  {% set course = form.instance.course %}
+  <div class="container">
+    <h2 class="content-title mb-20">
+      Adding student group<br>
+      <small><a href="{{ course.get_absolute_url() }}">{{ course.name }}, {{ course.term }}</a></small>
+    </h2>
+    <form method="POST">
+      {{ crispy(form) }}
+      <div class="form-group">
+        <div class="controls ">
+          <input type="submit" name="submit" value="Add" class="btn btn-primary" id="submit-id-submit">
+          <input type="button" name="cancel" value="Cancel" class="btn btn btn-default" id="button-id-cancel" onclick="history.go(-1);">
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock content %}

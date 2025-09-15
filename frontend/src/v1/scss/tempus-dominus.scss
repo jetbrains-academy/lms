@@ -1,0 +1,15 @@
+@import '@eonasdan/tempus-dominus/dist/css/tempus-dominus.min.css';
+
+.tempus-dominus-widget {
+  width: auto;
+
+  .date-container {
+    width: 19em;
+  }
+  .time-container {
+    width: 10em;
+  }
+  .time-container-clock {
+    grid-auto-rows: calc(calc(19em - 2 * 4px) / 7);
+  }
+}

@@ -1,0 +1,17 @@
+{% extends "lms/layouts/v1_base.html" %}
+{% from "lms/macros/_faces.jinja2" import faces with context %}
+
+{% block content %}
+  <div class="container">
+    <div class="flex flex-wrap items-center">
+      <h2 class="flex-grow">
+        {% trans %}Facebook{% endtrans %}<br>
+        <small><a href="{{ course.get_absolute_url() }}">{{ course }}</a></small>
+      </h2>
+      <a href="{{ course.get_student_faces_export_url() }}" class="btn btn-primary btn-outline px-30 py-10">
+        {% trans %}Download full information{% endtrans %}
+      </a>
+    </div>
+    {{ faces(users) }}
+  </div>
+{% endblock content %}

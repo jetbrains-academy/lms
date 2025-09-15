@@ -1,0 +1,230 @@
+{% extends "lms/layouts/v1_base.html" %}
+{% from "lms/macros/_assignment_detail.jinja2" import info_panel, info_panel_row %}
+
+{% block title %}{{ a_s.student.get_short_name() }} - {{ a_s.assignment.title }}{% endblock %}
+
+{% block body_attrs %} data-init-sections="learning/solution"{% endblock body_attrs %}
+
+{% block javascripts %}
+  <script type="text/javascript">
+    window.__CSC__.config.localStorage.hashes = Object.assign((window.__CSC__.config.localStorage.hashes || {}), {{ hashes_json|safe }})
+  </script>
+{% endblock javascripts %}
+
+
+{% block content %}
+  <div class="container" id="student-submission-comments">
+    <div class="row">
+      <div class="col-xs-12 h2-and-buttons">
+        <h2>
+          <a href="{{ url('study:assignment_list') }}"><span class="fa fa-angle-left"></span></a>
+          {{ a_s.assignment.title }} <br>
+          <a class="small" href="{{ a_s.assignment.course.get_absolute_url() }}">{{ a_s.assignment.course }}</a>
+        </h2>
+        <hr>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-9">
+        <div class="csc-well">
+          <div class="ubertext">
+            {{ a_s.assignment.text|markdown("assignment_text", 3600, a_s.assignment.pk, a_s.assignment.modified) }}
+          </div>
+          {% with assignment_attachments = a_s.assignment.assignmentattachment_set.all() %}
+            {% if assignment_attachments %}
+              <ul class="list-unstyled">
+                {% for aa in assignment_attachments %}
+                  <li>
+                      <span class="assignment-attachment">
+                        <i class="fa fa-file"></i> <a href="{{ aa.get_download_url() }}">{{ aa.file_name }}</a>
+                      </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% endwith %}
+        </div>
+        {% set assignment_submissions = a_s.assignmentcomment_set.all() %}
+        {% if assignment_submissions %}
+          <ul class="comment-list">
+            {% for comment in assignment_submissions %}
+              {# Should be ok for comparing python int type with None #}
+              {% if first_comment_after_deadline and comment.pk == first_comment_after_deadline.pk %}
+                <li>
+                  <hr class="deadline">
+                </li>
+              {% endif %}
+              <li class="{{ get_comment_element_class(comment) }}">
+                <div class="panel bg-gray assignment-submission assignment-{{ comment.type }}"
+                     {% if request.user.is_curator or is_actual_teacher %}data-id="{{ comment.pk }}"{% endif %}>
+                  <div class="panel-body">
+                    <span class="assignment-submission__date pull-right">{{ comment.created_local(tz=time_zone)|date("d.m.Y H:i") }}</span>
+                    <h5 class="assignment">{{ comment.get_author_name() }}</h5>
+                    <div class="text-muted"><p>{{ get_score_status_changing_message(comment) }}</p></div>
+                    {% if comment.text %}
+                      <div class="ubertext">
+                        {{ comment.text|markdown("assignment_comment", 3600, comment.pk, comment.modified) }}
+                      </div>
+                    {% endif %}
+                    {% if comment.attached_file %}
+                      <div class="metainfo-holder">
+                        <span class="assignment-attachment">
+                          <i class="fa fa-file"></i> <a
+                          href="{{ comment.get_attachment_download_url() }}">{{ comment.attached_file_name }}</a>
+                        </span>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  {% with checker_submission = comment.submission %}
+                    {% if checker_submission %}
+                      <div class="panel-footer" style="border-top: 1px solid #eee;">
+                        <div class="clearfix">
+                          {% if checker_submission.report_url %}
+                            <a class="pull-right nowrap submission-status {{ checker_submission.status_choice.css_class }}" target="_blank"
+                               href="{{ checker_submission.report_url }}">
+                              {{ checker_submission.verdict_or_status }}
+                            </a>
+                          {% else %}
+                            <span
+                              class="pull-right nowrap submission-status {{ checker_submission.status_choice.css_class }}">{{ checker_submission.verdict_or_status }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if jba_error %}
+          <div class="mt-30 text-error csc-well">
+            {{ jba_error }}
+          </div>
+        {% endif %}
+        <div class="mt-30 assignment-actions">
+          {% if solution_form %}
+            <button id="add-solution" class="btn btn-lg btn-link active">
+              {% trans %}Add solution{% endtrans %}
+            </button>
+          {% elif jba_course %}
+            <button id="tab-jba" class="btn btn-lg btn-link active">
+              {% trans %}Solve course{% endtrans %}
+            </button>
+          {% endif %}
+          <button id="add-comment" class="btn btn-lg btn-link {% if not (solution_form or jba_course) %}active{% endif %}">
+            {% trans %}Write comment{% endtrans %}
+          </button>
+        </div>
+        <div id="comment-form-wrapper" class="csc-well {% if (solution_form or jba_course) %}hidden{% endif %}">
+          {{ crispy(comment_form) }}
+          <div class="text-muted">
+            {% trans -%}
+              Comments don’t change the status.<br>
+              To update the solution for the teacher, use the Submit Solution tab.
+            {%- endtrans %}
+          </div>
+        </div>
+        {% if solution_form %}
+          <div id="solution-form-wrapper" class="csc-well">
+            {{ crispy(solution_form) }}
+          </div>
+        {% elif jba_course %}
+          <div id="tab-content-jba" class="csc-well">
+            {% if request.user.jetbrains_account %}
+              <p>{% trans %}Linked account:{% endtrans %} {{ request.user.jetbrains_account }}</p>
+              <p
+                id="jba-course-tutorial"
+                data-marketplace-link="https://plugins.jetbrains.com/plugin/{{ jba_course.id }}"
+              >
+                {% trans %}
+                  Click the "Open in IDE" button to begin the task.
+                  You need <a href="https://www.jetbrains.com/toolbox-app/" target="_blank">JetBrains Toolbox</a> installed to use the button.
+                  {# template substitutions don't work inside {% trans %} for some reason #}
+                  If you don't have it, you can click <a id="jba-marketplace-link" target="_blank">here</a>
+                  for an alternative method.
+                {% endtrans %}
+              </p>
+              <p>
+                {% trans %}
+                  Results are updated every few hours and at the time of the deadline.
+                  You can also update them manually by clicking the button below.
+                {% endtrans %}
+              </p>
+              <a
+                class="btn btn-primary"
+                href="{{ jba_course.toolbox_link }}"
+              >
+                {% trans %}Open in IDE{% endtrans %}
+              </a>
+              <button
+                id="jba-update-results-btn"
+                class="btn btn-secondary"
+                data-student-assignment-id="{{ a_s.id }}"
+              >
+                {% trans %}Update now{% endtrans %}
+              </button>
+              {% if assignment_submissions
+                 and 'jba_solved_task_ids' in assignment_submissions.last().meta
+                 and assignment_submissions.last().meta['jba_solved_task_ids'] == [] %}
+                <p class="mt-10 fw-bold" id="jba-no-submissions-help-text">
+                  {% trans %}
+                  Don't see your results? Check that you see your submissions in the "Submissions" tab in your IDE
+                  {% endtrans %}
+                </p>
+              {% endif %}
+            {% else %}
+              <p>{% trans %}Link your JetBrains account to submit solutions{% endtrans %}</p>
+              <a
+                href="{{ request.user.get_update_profile_url() }}"
+                class="btn btn-primary"
+              >
+                {% trans %}Go to profile{% endtrans %}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-xs-3">
+        {% call info_panel() %}
+          {% call info_panel_row(_("Status")) %}
+            {{ a_s.get_status_display() }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Grade")) %}
+            {{ a_s.get_score_verbose_display() }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Deadline")) %}
+            {{ a_s.assignment.deadline_at_local(tz=time_zone)|naturalday("d E Y") }}
+            {{ a_s.assignment.deadline_at_local(tz=time_zone)|time("H:i") }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Weight")) %}
+            <span class="nowrap">{{ a_s.assignment.weight }}</span>
+          {% endcall %}
+
+          {% call info_panel_row(_("Professor") if one_teacher else _("Professors")) %}
+            <ul class="list-unstyled mb-0">
+              {% for course_teacher in a_s.assignment.course.course_teachers.all() %}
+                <li>
+                  <a href="{{ course_teacher.teacher.teacher_profile_url() }}">{{ course_teacher.teacher.get_full_name() }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endcall %}
+
+          {% call info_panel_row(_("Format")) %}
+            {{ a_s.assignment.get_submission_type_display() }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Created")) %}
+            {{ a_s.assignment.created_local()|date("d E Y") }}
+          {% endcall %}
+        {% endcall %}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

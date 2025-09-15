@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Account Activated" %}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-8 col-xs-offset-2">
+                <p>
+                    Your account is activated.{% if not user.is_authenticated %}<br>Please use the invitation page to log in. Once you join a course, you will be able to log in normally.{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

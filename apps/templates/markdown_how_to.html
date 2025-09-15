@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+{% load markdown from core_tags %}
+
+{% block hightlight_styles %}
+<link href="{% static "v1/css/vendor/highlight-styles/github.css" %}" rel="stylesheet">
+{% endblock hightlight_styles %}
+
+{% block body_attrs %} class="gray"{% endblock body_attrs %}
+
+{% block content %}
+    <div class="container" id="comment-the-right-way-page">
+        <div class="row">
+            <div class="col-xs-9">
+                <ol class="breadcrumb gray">
+                    <li class="">Text Formatting Guide</li>
+                </ol>
+                <p>In all parts of the website, we use Markdown for text formatting and LaTeX for formulas.<br>Here’s a quick example to show what they can do.</p>
+<div class="nav-tabs-horizontal nav-tabs-inverse">
+    <ul class="nav nav-tabs nav-tabs-solid" data-plugin="nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+            <a data-toggle="tab" href="#code-1" aria-controls="applicant" role="tab" aria-expanded="true">What you type</a>
+        </li>
+        <li role="presentation" class="">
+            <a data-toggle="tab" href="#result-1" aria-controls="result-1" role="tab" aria-expanded="false">What you get</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="code-1" role="tabpanel">
+            <div class="ubertext">
+            <pre><code class="language-markdown hljs"># Markdown Quick Reference
+
+Markdown and $\LaTeX$ are supported in the input field.
+
+**bold text**
+
+*italicized text*
+
+`monospaced text`
+
+
+Use an empty line to separate paragraphs:
+
+Paragraph one.
+Further content of the first paragraph.
+
+Paragraph two.
+
+You can add lists:
+
+  * First item
+  * Second item
+    Further content of the second item
+  * Third item
+
+Note the empty line before and after the list.
+
+You can use different levels of headings like this:
+
+## Heading 2
+
+### Heading 3
+
+
+To add a code snippet, use this format:
+
+```
+# Useful comment
+foo = 42
+for i in range(foo):
+    print("I <3 Computer Science")
+```
+
+Remember to leave an empty line before the backticks.
+
+The same, but using 4 spaces:
+
+    # Useful comment
+    foo = 42
+    for i in range(foo):
+        print("I <3 Computer Science")
+
+Surround formulas with dollar signs $F_n$.
+To put a formula on a separate line, use double dollar signs: $$F_n = F_{n-1} + F_{n-2}$$
+
+# LaTeX Quick Reference
+
+Subscripts and superscripts: $x_i, x^j, x_i^j, x_{i+1}$.
+
+Some functions and symbols: $\pi, e, \sin{x}, \log(\mathbf{V} + \mathbf{E})$.
+
+Fractions: $\frac{1}{2}, \binom{6}{4}$.
+
+Sums: $\sum_{i=0}^n i^2$.
+
+Product: $f$, $o$ and $o$: $foo$.
+
+Variable `foo`: $\mathtt{foo}$.</code></pre></div>
+        </div>
+        <div class="tab-pane" id="result-1" role="tabpanel">
+<div class="ubertext">
+{% markdown 3600 "markdown_how_to_v1" %}
+# Markdown Quick Reference
+
+Markdown and $\LaTeX$ are supported in the input field.
+
+**bold text**
+
+*italicized text*
+
+`monospaced text`
+
+
+Use an empty line to separate paragraphs:
+
+Paragraph one.
+Продолжение первого параграфа.
+
+Paragraph two.
+
+You can add lists:
+
+  * First item
+  * Second item
+    Further content of the second item
+  * Third item
+
+Note the empty line before and after the list.
+
+You can use different levels of headings like this:
+
+## Heading 2
+
+### Heading 3
+
+
+To add a code snippet, use this format:
+
+```
+# Useful comment
+foo = 42
+for i in range(foo):
+    print("I <3 Computer Science")
+```
+
+Remember to leave an empty line before the backticks.
+
+The same, but using 4 spaces:
+
+    # Useful comment
+    foo = 42
+    for i in range(foo):
+        print("I <3 Computer Science")
+
+Surround formulas with dollar signs $F_n$.
+To put a formula on a separate line, use double dollar signs: $$F_n = F_{n-1} + F_{n-2}$$
+
+# LaTeX Quick Reference
+
+Subscripts and superscripts: $x_i, x^j, x_i^j, x_{i+1}$.
+
+Some functions and symbols: $\pi, e, \sin{x}, \log(\mathbf{V} + \mathbf{E})$.
+
+Fractions: $\frac{1}{2}, \binom{6}{4}$.
+
+Sums: $\sum_{i=0}^n i^2$.
+
+Product: $f$, $o$ and $o$: $foo$.
+
+Variable `foo`: $\mathtt{foo}$.
+{% endmarkdown %}
+</div>
+
+
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

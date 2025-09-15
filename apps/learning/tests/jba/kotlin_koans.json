@@ -1,0 +1,439 @@
+{
+  "id": 100001,
+  "tasks": [
+    {
+      "id": 100002,
+      "name": "Hello, world!",
+      "eduId": 234720,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100002
+    },
+    {
+      "id": 100003,
+      "name": "Named arguments",
+      "eduId": 234722,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100003
+    },
+    {
+      "id": 100004,
+      "name": "Default arguments",
+      "eduId": 234723,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100004
+    },
+    {
+      "id": 100005,
+      "name": "Triple-quoted strings",
+      "eduId": 963311,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100005
+    },
+    {
+      "id": 100006,
+      "name": "String templates",
+      "eduId": 234725,
+      "type": "edu",
+      "taskSequentialNumber": 5,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100006
+    },
+    {
+      "id": 100007,
+      "name": "Nullable types",
+      "eduId": 234727,
+      "type": "edu",
+      "taskSequentialNumber": 6,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100007
+    },
+    {
+      "id": 100008,
+      "name": "Nothing type",
+      "eduId": 963312,
+      "type": "edu",
+      "taskSequentialNumber": 7,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100008
+    },
+    {
+      "id": 100009,
+      "name": "Lambdas",
+      "eduId": 234724,
+      "type": "edu",
+      "taskSequentialNumber": 8,
+      "lessonSequentialNumber": 1,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100009
+    },
+    {
+      "id": 100010,
+      "name": "Data classes",
+      "eduId": 963306,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 2,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100010
+    },
+    {
+      "id": 100011,
+      "name": "Smart casts",
+      "eduId": 963307,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 2,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100011
+    },
+    {
+      "id": 100012,
+      "name": "Sealed classes",
+      "eduId": 963308,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 2,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100012
+    },
+    {
+      "id": 100013,
+      "name": "Rename on import",
+      "eduId": 963309,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 2,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100013
+    },
+    {
+      "id": 100014,
+      "name": "Extension functions",
+      "eduId": 963310,
+      "type": "edu",
+      "taskSequentialNumber": 5,
+      "lessonSequentialNumber": 2,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100014
+    },
+    {
+      "id": 100015,
+      "name": "Comparison",
+      "eduId": 234733,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 3,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100015
+    },
+    {
+      "id": 100016,
+      "name": "Ranges",
+      "eduId": 234735,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 3,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100016
+    },
+    {
+      "id": 100017,
+      "name": "For loop",
+      "eduId": 234736,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 3,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100017
+    },
+    {
+      "id": 100018,
+      "name": "Operators overloading",
+      "eduId": 234737,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 3,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100018
+    },
+    {
+      "id": 100019,
+      "name": "Invoke",
+      "eduId": 234739,
+      "type": "edu",
+      "taskSequentialNumber": 5,
+      "lessonSequentialNumber": 3,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100019
+    },
+    {
+      "id": 100020,
+      "name": "Introduction",
+      "eduId": 234740,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100020
+    },
+    {
+      "id": 100021,
+      "name": "Sort",
+      "eduId": 234745,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100021
+    },
+    {
+      "id": 100022,
+      "name": "Filter map",
+      "eduId": 234741,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100022
+    },
+    {
+      "id": 100023,
+      "name": "All Any and other predicates",
+      "eduId": 234742,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100023
+    },
+    {
+      "id": 100024,
+      "name": "Associate",
+      "eduId": 963313,
+      "type": "edu",
+      "taskSequentialNumber": 5,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100024
+    },
+    {
+      "id": 100025,
+      "name": "GroupBy",
+      "eduId": 234747,
+      "type": "edu",
+      "taskSequentialNumber": 6,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100025
+    },
+    {
+      "id": 100026,
+      "name": "Partition",
+      "eduId": 234748,
+      "type": "edu",
+      "taskSequentialNumber": 7,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100026
+    },
+    {
+      "id": 100027,
+      "name": "FlatMap",
+      "eduId": 234743,
+      "type": "edu",
+      "taskSequentialNumber": 8,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100027
+    },
+    {
+      "id": 100028,
+      "name": "Max min",
+      "eduId": 234744,
+      "type": "edu",
+      "taskSequentialNumber": 9,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100028
+    },
+    {
+      "id": 100029,
+      "name": "Sum",
+      "eduId": 234746,
+      "type": "edu",
+      "taskSequentialNumber": 10,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100029
+    },
+    {
+      "id": 100030,
+      "name": "Fold and reduce",
+      "eduId": 234749,
+      "type": "edu",
+      "taskSequentialNumber": 11,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100030
+    },
+    {
+      "id": 100031,
+      "name": "Compound tasks",
+      "eduId": 234750,
+      "type": "edu",
+      "taskSequentialNumber": 12,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100031
+    },
+    {
+      "id": 100032,
+      "name": "Sequences",
+      "eduId": 963314,
+      "type": "edu",
+      "taskSequentialNumber": 13,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100032
+    },
+    {
+      "id": 100033,
+      "name": "Getting used to new style",
+      "eduId": 234751,
+      "type": "edu",
+      "taskSequentialNumber": 14,
+      "lessonSequentialNumber": 4,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100033
+    },
+    {
+      "id": 100034,
+      "name": "Properties",
+      "eduId": 234752,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 5,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100034
+    },
+    {
+      "id": 100035,
+      "name": "Lazy property",
+      "eduId": 234753,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 5,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100035
+    },
+    {
+      "id": 100036,
+      "name": "Delegates examples",
+      "eduId": 234754,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 5,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100036
+    },
+    {
+      "id": 100037,
+      "name": "Delegates how it works",
+      "eduId": 234755,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 5,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100037
+    },
+    {
+      "id": 100038,
+      "name": "Function literals with receiver",
+      "eduId": 234756,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100038
+    },
+    {
+      "id": 100039,
+      "name": "String and map builders",
+      "eduId": 234757,
+      "type": "edu",
+      "taskSequentialNumber": 2,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100039
+    },
+    {
+      "id": 100040,
+      "name": "The function apply",
+      "eduId": 234758,
+      "type": "edu",
+      "taskSequentialNumber": 3,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100040
+    },
+    {
+      "id": 100041,
+      "name": "Html builders",
+      "eduId": 234759,
+      "type": "edu",
+      "taskSequentialNumber": 4,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100041
+    },
+    {
+      "id": 100042,
+      "name": "Builders how it works",
+      "eduId": 234760,
+      "type": "edu",
+      "taskSequentialNumber": 5,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100042
+    },
+    {
+      "id": 100043,
+      "name": "Builders implementation",
+      "eduId": 963315,
+      "type": "edu",
+      "taskSequentialNumber": 6,
+      "lessonSequentialNumber": 6,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100043
+    },
+    {
+      "id": 100044,
+      "name": "Generic functions",
+      "eduId": 234761,
+      "type": "edu",
+      "taskSequentialNumber": 1,
+      "lessonSequentialNumber": 7,
+      "sectionSequentialNumber": null,
+      "idOrThrow": 100044
+    }
+  ],
+  "name": "Kotlin Koans",
+  "updateVersion": 6,
+  "marketplaceId": 16628,
+  "idOrThrow": 100001
+}

@@ -1,0 +1,3 @@
+{% load tz %}{% localtime off %}{{ student_name }} submitted a solution for <a href="{{ assignment_link }}">{{ assignment_name }}</a> at {{ notification_created|time:"H:i" }}. Click to view the solution: <a href="{{ a_s_link_teacher }}">{{ a_s_link_teacher }}</a>
+
+This is an automated email, no need to reply.{% endlocaltime %}

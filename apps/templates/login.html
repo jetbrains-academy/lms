@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Log in" %}{% endblock title %}
+{% block body_attrs %} class="sign-in"{% endblock body_attrs %}
+
+{% block stylesheets %}
+<style>
+  .grecaptcha-badge {
+    z-index: 1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="container-box panel panel-body panel-default">
+                <form id="sign-in" method="POST">
+                    {% block form_legend %}
+                        {% if has_next %}
+                            {% if user.is_authenticated %}
+                                <p>You are not authorized to view this page.
+                                    Please log in with an authorized account.</p>
+                            {% else %}
+                                <p>Log in to continue</p>
+                            {% endif %}
+                        {% endif %}
+                    {% endblock form_legend %}
+                    {% csrf_token %}
+
+                    <label for="{{ form.username.id_for_label }}">
+                        <input class="form-control" type="text" name="{{ form.username.name }}" required="" class="form-control" {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
+                               placeholder="{{ form.username.label }}" id="{{ form.username.id_for_label }}" tabindex="3">
+                        <span class="error-message">{{ form.username.errors }}</span>
+                    </label>
+                    <label for="{{ form.password.id_for_label }}" class="password-block">
+                        <input class="form-control" type="password" name="{{ form.password.name }}" required="" {% if form.username.value %}value="{{ form.password.value }}"{% endif %}
+                               placeholder="{{ form.password.label }}" id="{{ form.password.id_for_label }}" tabindex="4"
+                               autocomplete="off">
+                        <a class="forgot" title="{% trans "Password Reset" %}" href="{% url 'auth:password_reset' %}" tabindex="5">{% trans "Forgot?" %}</a>
+                        <span class="error-message">{{ form.password.errors }}{% for error in form.non_field_errors  %}{{ error }}<br>{% endfor %}</span>
+                    </label>
+                    {{ form.captcha }}
+                    <span class="error-message">{{ form.captcha.errors }}</span>
+                    <input type="submit" class="btn btn-primary sign-up-in" value="{% trans "Sign in" %}" tabindex="6">
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

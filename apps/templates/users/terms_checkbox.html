@@ -1,0 +1,15 @@
+{% load i18n %}
+{% load crispy_forms_field %}
+{% load static %}
+
+<div class="form-group">
+<div id="div_{{ field.auto_id }}" class="checkbox{% if field.errors %} has-error{% endif %}">
+    <label for="{{ field.id_for_label }}" class="requiredField">
+        {% crispy_field field %}
+        {% trans "I accept" %} <a href="{% static "lms-terms-and-conditions-v1.pdf" %}" target="_blank">{% trans "terms and conditions" %}</a><span class="asteriskField">*</span>
+    </label>
+    {% for error in field.errors %}
+      <span id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="help-block"><strong>{{ error }}</strong></span>
+    {% endfor %}
+</div>
+</div>

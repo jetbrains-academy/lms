@@ -1,0 +1,170 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block body_attrs %} data-init-sections="gradebook"{% endblock body_attrs %}
+
+{% block javascripts %}
+  {{ render_bundle('teaching', config='V1', extension='js') }}
+{% endblock javascripts %}
+
+{% block content %}
+  {% if view.is_for_staff %}
+    {% set gradebook_url_reverse_name = 'staff:gradebook' %}
+  {% else %}
+    {% set gradebook_url_reverse_name = 'teaching:gradebook' %}
+  {% endif %}
+
+  <div class="container">
+      <div class="row">
+        <div class="col-xs-12 h2-and-buttons">
+          <h2>
+            {% if request.resolver_match.url_name == 'gradebook' and 'teaching' in request.resolver_match.namespaces %}
+              <a href="{{ url('teaching:gradebook_list') }}"><span class="fa fa-angle-left"></span></a>
+            {% else %}
+              <a href="{{ url('staff:gradebook_list') }}"><span class="fa fa-angle-left"></span></a>
+            {% endif %}
+            {% trans %}Marks sheet{% endtrans %}<br>
+            <a class="small" href="{{ gradebook.course.get_absolute_url() }}">{{ gradebook.course }}</a>
+          </h2>
+          <div class="btn-toolbar">
+            {% if not form.is_readonly %}
+            <div class="btn-group">
+              <button type="submit" class="btn btn-primary pull-right" id="marks-sheet-save">{% trans %}Save{% endtrans %}</button>
+            </div>
+            {% endif %}
+            <div class="btn-group">
+              <a href="{{ gradebook.course.get_gradebook_url(url_name=gradebook_url_reverse_name, format='csv') }}" target="_blank"
+                 class="btn btn-default marks-sheet-csv-link" role="button" data-toggle="tooltip">
+                <i class="fa fa-download"></i> Download gradebook.csv
+              </a>
+            </div>
+            {% if not form.is_readonly %}
+            <div class="btn-group">
+              <a class="btn btn-default" data-toggle="dropdown"><i class="fa fa-upload"></i> Import Grades<span class="caret"></span></a>
+              <ul class="dropdown-menu pull-right" role="menu">
+                <li role="presentation">
+                  <a href="#import-scores-from-csv-enrollments" role="menuitem" data-toggle="modal">Import task grades from CSV</a>
+                </li>
+                <li role="presentation">
+                  <a href="#import-grades-from-csv-enrollments" role="menuitem" data-toggle="modal">Import course grades from CSV</a>
+                </li>
+              </ul>
+            </div>
+            {% endif %}
+            <div class="btn-group">
+              <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                All gradebooks&nbsp;<span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu pull-right scrollable-menu" role="menu" aria-labelledby="dropdownMenu1">
+                {% for cos in course_offering_list|groupby('semester') %}
+                  <li role="presentation" class="dropdown-header">{{ cos.grouper }}</li>
+                  {% for course in cos.list %}
+                    <li role="presentation">
+                      <a role="menuitem" tabindex="-1"
+                         href="{{ course.get_gradebook_url(url_name=gradebook_url_reverse_name) }}">{{ course.meta_course }}</a>
+                    </li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <hr>
+        </div>
+      </div>
+      {% if filter_form.is_visible() %}
+          <form method="get" name="gradebook">
+          <label for="{{ filter_form.student_group.id_for_label }}">Group</label>
+          <div class="row form-group">
+            <div class="col-xs-3">
+            {{ filter_form.student_group }}
+            </div>
+            <div class="col-xs-2">
+              <button type="submit" class="btn btn-outline btn-primary" id="apply-filter">Filter</button>
+            </div>
+          </div>
+          </form>
+      {% endif %}
+      {% if gradebook.assignments %}
+        <div class="gradebook__controls">
+          <span class="scroll left">«</span><span class="scroll right">»</span>
+        </div>
+      {% endif %}
+      <form method="post" name="gradebook">
+      {% csrf_token %}
+      <div class="gradebook-wrapper">
+        <div id="gradebook-container">
+          <div id="gradebook" style="width: {{ gradebook.get_table_width() }}px;">
+            <div class="headers">
+              <div class="title __student">{% trans %}Students{% endtrans %}</div>
+              <div class="title __final_grade">{% trans %}Grades{% endtrans %}</div>
+              {% if gradebook.assignments %}
+                <div class="title __total_score">{% trans %}Total{% endtrans %}</div>
+              {% endif %}
+              {% for gradebook_assignment in gradebook.assignments.values() %}
+                {% with assignment=gradebook_assignment.assignment %}
+                  <div class="title __assignment{% if gradebook.show_weight %}  __weight{% endif %}">
+                    <a href="{{ assignment.get_teacher_url() }}" title="{{ assignment.title }}">{{ assignment.title }}</a>
+                    {% if gradebook.show_weight %}
+                      <div class="assignment__weight">Weight: {{ assignment.weight }}</div>{% endif %}
+                  </div>
+                {% endwith %}
+              {% endfor %}
+            </div>
+
+            <div class="grid">
+              {% for gradebook_student in gradebook.students.values() %}{% spaceless %}
+                {% with student=gradebook_student.student %}
+                  <div class="student {{ loop.cycle('', 'even') }}">
+                    <a class="cell __student {{ loop.cycle('', 'even') }}" href="{{ student.get_absolute_url() }}"
+                       title="{{ student.username }}">
+                      {% if gradebook_student.student_type == StudentTypes.INVITED %}
+                        <i style="font-size:14px" class="fa" title="{{ gradebook_student.invitation }}">&#xf069;</i>
+                      {% endif %} {{ student.get_abbreviated_short_name() }}
+                    </a>
+                    <div class="cell __final_grade {{ loop.cycle('', 'even') }}">
+                      {{ form.get_final_widget(gradebook_student.enrollment_id) }}
+                    </div>
+                    {% if gradebook.assignments %}
+                      <div class="cell __total_score {{ loop.cycle('', 'even') }}">{{ gradebook_student.total_score }}</div>
+                    {% endif %}
+                    {% for student_assignment in gradebook.student_assignments[gradebook_student.index] %}
+                      {% if student_assignment %}
+                        {% if not form.is_widget_enabled(student_assignment) %}
+                          <div class="cell __assignment __score">
+                            <a href="{{ student_assignment.get_teacher_url() }}">{{ get_student_assignment_state(student_assignment) }}</a>
+                          </div>
+                        {% else %}
+                          {{ form.get_assignment_widget(student_assignment.id) }}
+                        {% endif %}
+                      {% else %}
+                        <div class="cell __assignment __expelled"></div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endwith %}
+              {% endspaceless %}{% endfor %}
+            </div>
+
+            <div class="meta">
+              <div class="cell __student gray">{% trans %}Students{% endtrans %}:&nbsp;{{ gradebook.students|length }}</div>
+              <div class="cell __final_grade"></div>
+              {% if gradebook.assignments %}
+                <div class="cell __total_score"></div>
+              {% endif %}
+              {% for gradebook_assignment in gradebook.assignments.values() %}
+                <div class="cell __assignment __meta">
+                  {{ gradebook_assignment.assignment.maximum_score }}
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if gradebook.assignments|length > 8 %}
+              <div class="shadow"></div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% include "lms/gradebook/_modal_import_csv_enrollments.html" %}
+
+{% endblock content %}

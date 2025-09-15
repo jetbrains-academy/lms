@@ -1,0 +1,70 @@
+{% import "lms/macros/_global.jinja2" as macros %}
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=960">
+    <meta name="google-site-verification" content="pBs4x-E9VGlX-gA7WxCNEqcYB0TYJCSmcZtSeLBpEgk" />
+    <title>{% block title %}{{ request.site.name }}{% endblock title %}</title>
+    <link rel="shortcut icon" type="image/png" href="{{ static(FAVICON_PATH) }}">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{{ static("v1/dist/css/center_style.css") }}" rel="stylesheet">
+    {% if request.user.is_curator %}
+        <link href="{{ static("v1/dist/css/center_staff.css") }}" rel="stylesheet">
+    {% endif %}
+    {% block hightlight_styles %}
+    <link href="{{ static("v1/css/vendor/highlight-styles/tomorrow.css") }}" rel="stylesheet">
+    {% endblock hightlight_styles %}
+    {% block stylesheets %} {% endblock stylesheets %}
+    <script>
+      // Global Configuration
+      window.__CSC__ = {
+        profile: {
+          timezone: "{{ request.user.time_zone|string }}"
+        },
+        config: {
+          maxUploadSize: {{ FILE_MAX_UPLOAD_SIZE }},
+          csrfCookieName: "{{ CSRF_COOKIE_NAME }}",
+          sentryDSN: "{{ SENTRY_DSN }}",
+          JS_SRC: {
+            MATHJAX: '//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML',
+          },
+          // Used to reflow editor on tab toggle event
+          uberEditors: [],
+          localStorage: {
+            // Map from hash to dummy value (effectively a set)
+            hashes: []
+          }
+        },
+        notifications: {{ messages(request)|tojson }},
+      };
+    </script>
+  </head>
+
+  <body {% block body_attrs %}{% endblock body_attrs %}>
+    {% block menu %}{%- include "lms/layouts/_top_menu.html" -%}{% endblock menu %}
+
+    {% block content %}
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12">
+          hello world
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+    <div class="footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12 text-center">{{ request.site.name }}, 2024</div>
+        </div>
+      </div>
+    </div>
+
+    {{ render_bundle('vendor', config='V1', extension='js') }}
+    {{ render_bundle('main', config='V1', extension='js') }}
+
+    {% block javascripts %}{% endblock javascripts %}
+  </body>
+</html>

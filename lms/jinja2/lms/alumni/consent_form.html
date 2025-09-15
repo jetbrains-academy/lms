@@ -1,0 +1,14 @@
+{% extends "lms/layouts/v1_base.html" %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-8 col-xs-offset-2">
+        <h2 class="mb-20">
+          {% trans %}Alumni consent{% endtrans %}
+        </h2>
+        {{ crispy(form) }}
+      </div>
+    </div>
+  </div>
+{% endblock content %}

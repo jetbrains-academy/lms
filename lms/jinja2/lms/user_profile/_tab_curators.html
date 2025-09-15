@@ -1,0 +1,67 @@
+{% set request_user = request.user -%}
+
+{% if request_user.is_curator %}
+  <table class="table table-condensed table-striped">
+    <tr>
+      <td>Group</td>
+      <td>
+        {% for group in profile_user.groups.all() %}
+          {{ group.get_role_display() }}{% if not loop.last %}<br>{% endif %}
+        {% else %}
+         No listed groups
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Successfully completed courses</td>
+      <td>
+        {{ stats.passed.total }}
+      </td>
+    </tr>
+    <tr>
+      <td>Entries per semester [{{ current_semester }}]</td>
+      <td>{{ stats.in_term.total }}</td>
+    </tr>
+    {% if applicant_list %}
+      <tr>
+        <td>Questionnaires</td>
+        <td>
+          {% for applicant in applicant_list %}
+            <a target="_blank" href="{{ applicant.get_absolute_url() }}">#{{ applicant.pk }}</a>{% if not loop.last %}, {% endif %}
+          {% else %}
+            Questionnaires not found
+          {% endfor %}
+        </td>
+      </tr>
+    {% endif %}
+  </table>
+
+  {% if can_view_library %}
+    <h4 class="_mtop-30">{% trans %}books{% endtrans %}:</h4>
+    {% if borrowed_books %}
+      <ul>
+        {% for borrow in borrowed_books %}
+          <li>
+            <a href="{{ borrow.stock.get_absolute_url() }}">{{ borrow.stock.book.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      No borrowed books.
+    {% endif %}
+  {% endif %}
+
+  {% if is_certificates_of_participation_enabled %}
+    <h4 class="_mtop-30">{% trans %}Student references{% endtrans %}:</h4>
+    {% if certificates_of_participation %}
+      <ul>
+        {% for reference in certificates_of_participation %}
+            <li><a target="_blank" href="{{ reference.get_absolute_url() }}?style=csc">{{ reference.created|date("d.m.Y") }}</a></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <a href="{{ url('student_reference_add', user_id=profile_user.pk, subdomain=LMS_SUBDOMAIN) }}"
+       class="btn btn-primary btn-outline">{% trans %}Create reference{% endtrans %}</a>
+  {% endif %}
+
+{% endif %}

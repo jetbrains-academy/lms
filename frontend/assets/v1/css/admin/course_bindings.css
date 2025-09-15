@@ -1,0 +1,4 @@
+.inline-group .datetime .timezonewarning,
+.field-alumni_enrollment_end_date .timezonewarning {
+    display: none;
+}

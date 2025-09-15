@@ -1,0 +1,363 @@
+{% extends "lms/layouts/v1_base.html" %}
+{% from "lms/macros/_assignment_detail.jinja2" import info_panel, info_panel_row %}
+
+{% import "lms/macros/_forms.jinja2" as forms %}
+
+{% block title %}{{ a_s.student.get_short_name() }} - {{ a_s.assignment.title }}{% endblock %}
+
+{% block body_attrs %} data-init-sections="studentAssignment"{% endblock body_attrs %}
+
+{% block javascripts %}
+  <script type="text/javascript">
+    window.__CSC__.config.localStorage.hashes = Object.assign((window.__CSC__.config.localStorage.hashes || {}), {{ hashes_json|safe }});
+  </script>
+  {{ render_bundle('teaching', config='V1', extension='js') }}
+{% endblock javascripts %}
+
+{% block content %}
+  {% set request_user = request.user %}
+  <div class="container" id="student-submission-comments">
+    <div class="row">
+      <div class="col-xs-12 h2-and-buttons">
+        <h2>
+          <a href="{{ url('teaching:assignments_check_queue') }}"><span class="fa fa-angle-left"></span></a>
+          {{ a_s.student.get_short_name() }}
+          {% if request_user.is_curator %}
+            <a href="{{ url('admin:learning_studentassignment_change', object_id=a_s.pk) }}" target="_blank"><i
+              class="fa fa-pencil-square-o"></i></a>
+          {% endif %}
+          <br>
+          <small>
+            <a href="{{ a_s.assignment.get_teacher_url() }}">{{ a_s.assignment.title }}</a>
+            (<a href="{{ a_s.assignment.course.get_absolute_url() }}">{{ a_s.assignment.course }}</a>)
+          </small>
+        </h2>
+        <hr />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-9">
+        <div class="csc-well">
+          <div class="ubertext">
+            {{ a_s.assignment.text|markdown("assignment_text", 3600, a_s.assignment.pk, a_s.assignment.modified) }}
+          </div>
+          {% with assignment_attachments = a_s.assignment.assignmentattachment_set.all() %}
+            {% if assignment_attachments %}
+              <ul class="list-unstyled">
+                {% for aa in assignment_attachments %}
+                  <li>
+                      <span class="assignment-attachment">
+                        <i class="fa fa-file"></i> <a href="{{ aa.get_download_url() }}">{{ aa.file_name }}</a>
+                      </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        {% set assignment_submissions = a_s.assignmentcomment_set.all() %}
+        {% if assignment_submissions %}
+          <ul class="comment-list">
+            {% for comment in assignment_submissions %}
+              {% if first_comment_after_deadline and comment.pk == first_comment_after_deadline.pk %}
+                <li>
+                  <hr class="deadline">
+                </li>
+              {% endif %}
+              <li class="{{ get_comment_element_class(comment) }}">
+                <div class="panel bg-gray assignment-submission assignment-{{ comment.type }}"
+                     {% if request_user.is_curator or is_actual_teacher %}data-id="{{ comment.pk }}"{% endif %}>
+                  <div class="panel-body">
+                    <span class="assignment-submission__date pull-right">{{ comment.created_local(tz=time_zone)|date("d.m.Y H:i") }}</span>
+                    <h5 class="assignment">{{ comment.get_author_name() }}</h5>
+                    <div class="text-muted"><p>{{ get_score_status_changing_message(comment) }}</p></div>
+                    {% if comment.text %}
+                      <div class="ubertext">
+                        {{ comment.text|markdown("assignment_comment", 3600, comment.pk, comment.modified) }}
+                      </div>
+                    {% endif %}
+                    {% if comment.attached_file or comment.attachments.all() %}
+                      <div class="metainfo-holder">
+                        {% if comment.attached_file %}
+                          <div class="assignment-attachment"><i class="fa fa-file"></i> <a
+                            href="{{ comment.get_attachment_download_url() }}">{{ comment.attached_file_name }}</a></div>
+                        {% endif %}
+                        {% for submission_attachment in comment.attachments.all() %}
+                          {% if submission_attachment.file_name %}
+                            <div class="assignment-attachment">
+                              <i class="fa fa-file"></i> <a
+                              href="{{ submission_attachment.get_download_url() }}">{{ submission_attachment.file_name }}</a>
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  {% set checker_submission = comment.submission %}
+                  {% set show_execution_time = comment.type == 'solution' and comment.execution_time %}
+                  {% set can_edit_comment = (comment.type == 'comment') and (
+                    (is_actual_teacher and comment.author_id == request_user.pk and not comment.is_stale_for_edit) or
+                    request_user.is_curator) %}
+                  {% set show_panel_footer = can_edit_comment or checker_submission or show_execution_time %}
+
+                  {% if show_panel_footer %}
+                    <div class="panel-footer" style="border-top: 1px solid #eee;">
+                      <div class="clearfix">
+                        {% if show_execution_time %}
+                          <span class="mr-5"><i class="fa fa-clock-o"></i> {{ comment.get_execution_time_display() }}</span>{% endif %}
+                        {% if checker_submission %}
+                          {% if checker_submission.report_url %}
+                            <a class="pull-right nowrap submission-status {{ checker_submission.status_choice.css_class }}" target="_blank"
+                               href="{{ checker_submission.report_url }}">{{ checker_submission.verdict_or_status }}</a>
+                          {% else %}
+                            <span class="pull-right nowrap submission-status {{ checker_submission.status_choice.css_class }}">
+                            {{ checker_submission.verdict_or_status }}
+                          </span>
+                          {% endif %}
+                        {% endif %}
+                        {% if can_edit_comment %}
+                          <a href="{{ comment.get_update_url() }}" class="__edit pull-right">Edit</a>{% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% set can_create_comment = request_user.has_perm("learning.create_assignment_comment", a_s) %}
+        {% if can_create_comment %}
+          <div class="csc-well">
+            <form action="" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              {% if review_form.non_field_errors() %}
+                <div class="text-danger mb-20">
+                  <b>Form could not be saved</b><br>
+                  {% for error in review_form.non_field_errors()  %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+              <div class="row">
+                <div class="col-xs-12">
+                  {{ forms.field(review_form['text']) }}
+                </div>
+              </div>
+              <div class="row">
+                  <div class="col-xs-12">
+                      {{ review_form['attached_file'] }}
+                  </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-5">
+                  {{ forms.field(review_form['score'], hide_label=True, prepend_text='<b>Score</b>'|safe, append_text='of ' + max_score) }}
+                  {{ forms.field(review_form['score_old'], hide_label=True) }}
+                </div>
+                  <div class="col-sm-7">
+                      {{ forms.field(review_form['status'], hide_label=True, prepend_text="<b>Assignment status</b>"|safe) }}
+                      {{ forms.field(review_form['status_old'], hide_label=True) }}
+                  </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  <div class="pull-right">
+                    <input type="submit" name="save-draft" value="Save draft" class="btn btn-link" id="submit-id-review-save-draft">
+                    <input type="submit" name="save" value="Submit" class="btn btn-primary" id="submit-id-review-save">
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-xs-3">
+        {% call info_panel() %}
+          {% if is_actual_teacher and next_student_assignment %}
+            {% set next_ungraded_url = url('teaching:student_assignment_detail', pk=next_student_assignment.pk, subdomain=LMS_SUBDOMAIN) %}
+            <a href="{{ next_ungraded_url }}" class="btn btn-default next-unchecked-btn">
+              {% trans %}Next unchecked{% endtrans %} <i class="fa fa-angle-right"></i>
+            </a>
+          {% endif %}
+
+          {% call info_panel_row(_("Status")) %}
+            {{ a_s.get_status_display() }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Grade")) %}
+            {{ a_s.get_score_verbose_display() }}
+            {% if show_score_audit_log %}
+              <a
+                href="{{ url("teaching:api:scores:audit_log", student_assignment_id=a_s.pk) }}"
+                class="assignment-score-audit-log ml-5"
+                title="Change history"
+              >
+                <i class="fa fa-history"></i>
+              </a>
+            {% endif %}
+          {% endcall %}
+
+          {% call info_panel_row(_("Student")) %}
+            <a href="{{ a_s.student.get_absolute_url() }}">{{ a_s.student.get_full_name() }}</a>
+            <a
+              href="{{ student_course_progress_url }}"
+              title="Course Performance"
+              class="ml-5"
+            >
+              <i class="fa fa-th-list"></i>
+            </a>
+          {% endcall %}
+
+          {% call info_panel_row(_("Deadline")) %}
+            {{ a_s.assignment.deadline_at_local(tz=time_zone)|naturalday("d E Y") }} {{ a_s.assignment.deadline_at_local(tz=time_zone)|time("H:i") }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Weight")) %}
+            <span class="nowrap">{{ a_s.assignment.weight }}</span>
+          {% endcall %}
+
+          {% call info_panel_row(_("Time Spent")) %}
+            <span>
+              {%- if not a_s.execution_time -%}
+                {% trans %}Not specified{% endtrans %}
+              {%- else -%}
+                {{ a_s.get_execution_time_display() }}
+              {%- endif -%}
+            </span>
+          {% endcall %}
+
+          {% call info_panel_row(_("Assignee")) %}
+            <div class="nowrap" id="assignee-value" style="text-overflow: ellipsis; overflow: hidden;">
+              {% if a_s.assignee_id %}
+                {{ a_s.assignee.teacher.get_full_name() }}
+              {% else %}
+                Unassigned
+              {% endif %}
+              {% if a_s.assignment.course.course_teachers.all()|length > 0 %}
+                <a
+                  href="#"
+                  id="edit-assignee"
+                  data-toggle="modal"
+                  data-target="#update-assignee-form"
+                  class="ml-5"
+                >
+                  <i class="fa fa-pencil"></i>
+                </a>
+              {% endif %}
+            </div>
+          {% endcall %}
+
+          {% if not is_actual_teacher %}
+            {% call info_panel_row(_("Professor") if one_teacher else _("Professors")) %}
+              <ul class="list-unstyled mb-0">
+                {% for course_teacher in a_s.assignment.course.course_teachers.all() %}
+                  <li>
+                    <a href="{{ course_teacher.teacher.teacher_profile_url() }}">{{ course_teacher.teacher.get_full_name() }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endcall %}
+          {% endif %}
+
+          {% call info_panel_row(_("Format")) %}
+            {{ a_s.assignment.get_submission_type_display() }}
+          {% endcall %}
+
+          {% call info_panel_row(_("Created")) %}
+            {{ a_s.assignment.created_local()|date("d E Y") }}
+          {% endcall %}
+        {% endcall %}
+      </div>
+    </div>
+  </div>
+
+  {% include "lms/layouts/_modal.html" %}
+
+  <script type="text/template" id="assignment-score-audit-log-table">
+    <% if (edges.length > 0) { %>
+    <table class="table table-condensed mb-0">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Modified by</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% edges.forEach(function(node) { %>
+          <tr>
+            <td><%-node.createdAt%></td>
+            <td>
+              <% if (node.scoreOld !== null) { %>
+                <%-node.scoreOld%>
+              <% } else { %>
+                &mdash;
+              <% } %>
+            </td>
+            <td>
+              <% if (node.scoreNew !== null) { %><%-node.scoreNew%><% } else { %>&mdash;<% } %>
+            </td>
+            <td><%-node.author%></td>
+            <td><%-node.source%></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } else { %>
+      Grade modification log is empty
+    <% }; %>
+  </script>
+
+  <div id="update-comment-model-form" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Edit comment</h4>
+          <p class="text-muted">
+            Please don't change the meaning of the comment. The student might have seen it and started replying.<br />Just write a new one instead.
+          </p>
+        </div>
+        <div class="inner"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="update-assignee-form" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Reviewer Assignment Form</h4>
+        </div>
+        {% set assignee_form_action = url('learning-api:v1:my_course_student_assignment_assignee_update',
+                                          course_id=a_s.assignment.course_id, assignment_id=a_s.assignment_id,
+                                          student_id=a_s.student_id) %}
+        <form action="{{ assignee_form_action }}" id="assignee-form">
+          <div class="modal-body">
+            <div class="non_field_errors"></div>
+            <div class="form-group">
+              <label for="assignee-select">Teacher</label>
+              <select name="assignee" id="assignee-select" class="select form-control">
+                <option value="" {% if not a_s.assignee_id %}selected{% endif %}>Unassigned</option>
+                {% for course_teacher in assignee_teachers %}
+                  <option value="{{ course_teacher.pk }}" {% if course_teacher.pk == a_s.assignee_id %}selected{% endif %}>
+                    {{ course_teacher.teacher.get_full_name() }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+{% endblock content %}
