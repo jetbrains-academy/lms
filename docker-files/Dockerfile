@@ -11,7 +11,7 @@ RUN if [ "x$WEBPACK_ENVIRONMENT" = "x" ]; then echo "WEBPACK_ENVIRONMENT argumen
 
 RUN npm run ${WEBPACK_ENVIRONMENT}:1
 
-FROM python:3.10-slim-buster AS builder
+FROM python:3.10-slim AS builder
 
 # Python requirements
 COPY Pipfile* /tmp/
@@ -19,10 +19,9 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir pipenv==2022.11.11 \
     && cd /tmp/ \
     && pipenv --python /usr/local/bin/python requirements > /tmp/requirements-prod.txt \
-    && pipenv --python /usr/local/bin/python requirements --dev-only > /tmp/requirements-dev.txt \
-    && pip uninstall -y pipenv
+    && pipenv --python /usr/local/bin/python requirements --dev-only > /tmp/requirements-dev.txt
 
-FROM python:3.10-slim-buster
+FROM python:3.10-slim
 LABEL maintainer="webmaster@compscicenter.ru"
 
 # Create a group and user to run our app. Use the same sid/gid
@@ -74,7 +73,7 @@ RUN set -ex \
     " \
     && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
     && pip install --upgrade pip \
-    && pip install --no-cache-dir uwsgi==2.0.20 \
+    && pip install --no-cache-dir uwsgi==2.0.30 \
     && pip install --no-cache-dir -r /tmp/requirements-prod.txt \
     \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
