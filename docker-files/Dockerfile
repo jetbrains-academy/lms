@@ -11,7 +11,7 @@ RUN if [ "x$WEBPACK_ENVIRONMENT" = "x" ]; then echo "WEBPACK_ENVIRONMENT argumen
 
 RUN npm run ${WEBPACK_ENVIRONMENT}:1
 
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim-bookworm AS builder
 
 # Python requirements
 COPY Pipfile* /tmp/
@@ -21,13 +21,13 @@ RUN pip install --upgrade pip \
     && pipenv --python /usr/local/bin/python requirements > /tmp/requirements-prod.txt \
     && pipenv --python /usr/local/bin/python requirements --dev-only > /tmp/requirements-dev.txt
 
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 LABEL maintainer="webmaster@compscicenter.ru"
 
 # Create a group and user to run our app. Use the same sid/gid
 # as nginx container use
 ENV APP_USER=appuser
-RUN groupadd --gid=101 ${APP_USER} && useradd --no-log-init --uid=101 --gid ${APP_USER} ${APP_USER}
+RUN groupadd --gid=101 ${APP_USER} && useradd -r --no-log-init --uid=101 --gid ${APP_USER} ${APP_USER}
 
 # Install packages needed to run your application (not build deps):
 #   libpcre3 -- regular expressions support
@@ -44,10 +44,11 @@ RUN set -ex \
     git \
     gosu \
     postgresql-client \
-    mime-support \
+    media-types \
+    mailcap \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt-get update && apt-get install -y --no-install-recommends $RUN_DEPS \
+    && apt-get update -o Acquire::Retries=3 && apt-get install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy in python requirements file
